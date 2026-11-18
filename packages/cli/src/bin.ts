@@ -6,6 +6,7 @@ import { detect, Engine, findConfig } from '@stagecraft/server';
 import { drift, sync } from './agents.ts';
 import { doctor } from './doctor.ts';
 import { dev } from './dev.ts';
+import { GITHUB_HELP, githubCommand } from './github.ts';
 import { init } from './init.ts';
 import { loadRepos, workspaceCommand } from './workspace.ts';
 
@@ -24,7 +25,7 @@ Usage:
   stagecraft workspace status|clone|link|unlink|branch <name>
                                   Multi-repo products: repo status, clone missing repos, dev-link
                                   library packages, one prototype branch across repos
-  stagecraft mcp                  Run the MCP server on stdio (used by Claude Code, Codex, Cursor)
+${GITHUB_HELP}  stagecraft mcp                  Run the MCP server on stdio (used by Claude Code, Codex, Cursor)
 `;
 
 function flag(args: string[], name: string) {
@@ -61,6 +62,9 @@ async function main() {
     }
     case 'workspace':
       return workspaceCommand(cwd, sub, rest, log);
+    case 'pr':
+    case 'branch-from':
+      return githubCommand(cwd, cmd, sub, rest, log);
     case 'agents': {
       const { root, repos } = await loadRepos(cwd);
       if (sub === 'sync') {
