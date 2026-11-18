@@ -10,7 +10,7 @@ This repo is set up for prototyping with Stagecraft. The app runs on **mock data
 ## Hard rules
 1. **No production data or secrets.** Never add real API hosts, keys or connection strings. All API calls are served by mocks in `stagecraft/`.
 2. **Mock code stays in `stagecraft/`.** Product code must never import from `stagecraft/`. Product code may import `@stagecraft/react` or `@stagecraft/vue` (no-ops in production).
-3. **Use the design system.** Before you make a new component, look for an existing one. Use design tokens, not hard-coded colors or spacing.
+3. **Use the design system.** Before you make a new component, read `stagecraft/component-guide.md` (or call `components_guide`; regenerate with `npx --no stagecraft guide`). Use design tokens, not hard-coded colors or spacing.
 4. **Every new endpoint needs a mock.** Add a handler in `stagecraft/mocks.ts` and seed data in `stagecraft/seed.ts`. Check `mock_endpoints` for requests with no mock.
 5. **Every new screen needs its states.** Empty, loading, error, and each product state that changes the screen. Add states to `stagecraft/states.ts`.
 6. **Check your work visually.** After a UI change, call `preview_screenshot` for each changed screen in the states that matter. Fix what you see before you say you are done.
@@ -23,4 +23,5 @@ This repo is set up for prototyping with Stagecraft. The app runs on **mock data
 - `stagecraft/scenarios/*.json`: saved scenarios. `stagecraft/tapes/*.json`: product-agent conversation tapes.
 
 ## Skills
-Use the skills in your skills folder: `setup`, `build-screen`, `add-state`, `create-variant`, `apply-figma-frame`, `make-tape`, `self-check`, `handoff`.
+Use the skills in your skills folder: `setup`, `build-screen`, `add-state`, `create-variant`, `apply-figma-frame`, `make-tape`, `self-check`, `handle-feedback`, `handoff`.
+- When people leave comments in the panel, they reach you through `feedback_list`. Reply with `feedback_reply`; never resolve comments yourself.
