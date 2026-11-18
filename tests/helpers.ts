@@ -6,12 +6,12 @@ import { join, resolve } from 'node:path';
 export const REPO = resolve(import.meta.dirname, '..');
 export const EXAMPLE = join(REPO, 'examples/ref-react-vite');
 
-/** Copy the example's Stagecraft files to a temp folder inside the repo (so node_modules resolve). */
-export function fixture(name = 'fx'): { root: string; config: string } {
+/** Copy an example's Stagecraft files to a temp folder inside the repo (so node_modules resolve). */
+export function fixture(name = 'fx', example = EXAMPLE): { root: string; config: string } {
   const root = join(REPO, 'tests/.tmp', `${name}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`);
   mkdirSync(root, { recursive: true });
-  cpSync(join(EXAMPLE, 'stagecraft'), join(root, 'stagecraft'), { recursive: true });
-  cpSync(join(EXAMPLE, 'stagecraft.config.ts'), join(root, 'stagecraft.config.ts'));
+  cpSync(join(example, 'stagecraft'), join(root, 'stagecraft'), { recursive: true });
+  cpSync(join(example, 'stagecraft.config.ts'), join(root, 'stagecraft.config.ts'));
   return { root, config: join(root, 'stagecraft.config.ts') };
 }
 

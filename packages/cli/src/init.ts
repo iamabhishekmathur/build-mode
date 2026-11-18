@@ -94,6 +94,7 @@ export function init(root: string, log: (m: string) => void) {
   const gi = join(root, '.gitignore');
   const cur = existsSync(gi) ? readFileSync(gi, 'utf8') : '';
   if (!cur.includes('.stagecraft-cache')) writeFileSync(gi, cur.trimEnd() + (cur ? '\n' : '') + '.stagecraft-cache/\n');
-  log('Next: install the packages (npm i -D stagecraft @stagecraft/core @stagecraft/react), edit stagecraft/*.ts, then run "npx --no stagecraft dev".');
+  const adapter = d.framework && ['vue', 'nuxt'].includes(d.framework.name) ? '@stagecraft/vue' : '@stagecraft/react';
+  log(`Next: install the packages (npm i -D stagecraft @stagecraft/core ${adapter}), edit stagecraft/*.ts, then run "npx --no stagecraft dev".`);
   return d;
 }

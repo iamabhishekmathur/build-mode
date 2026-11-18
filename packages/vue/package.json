@@ -1,0 +1,9 @@
+{
+  "name": "@stagecraft/vue",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Vue 3 adapter (Vue, Nuxt). Safe in production: with no Stagecraft runtime it renders defaults.",
+  "exports": { ".": "./src/index.ts" },
+  "peerDependencies": { "vue": ">=3.3" },
+  "dependencies": { "@stagecraft/runtime": "0.1.0" }
+}

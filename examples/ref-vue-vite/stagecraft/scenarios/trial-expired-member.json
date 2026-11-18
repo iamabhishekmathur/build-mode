@@ -1,0 +1,8 @@
+{
+  "$schema": "https://stagecraft.dev/schema/scenario.v1.json",
+  "name": "Trial expired member",
+  "description": "A member in a workspace whose trial ended, with many projects.",
+  "persona": "member",
+  "states": { "workspace": "trial_expired", "projects": "many" },
+  "url": "/projects"
+}

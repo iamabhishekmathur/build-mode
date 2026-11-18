@@ -9,12 +9,12 @@ This repo is set up for prototyping with Stagecraft. The app runs on **mock data
 
 ## Hard rules
 1. **No production data or secrets.** Never add real API hosts, keys or connection strings. All API calls are served by mocks in `stagecraft/`.
-2. **Mock code stays in `stagecraft/`.** Product code must never import from `stagecraft/`. Product code may import `@stagecraft/react` (it is a no-op in production).
+2. **Mock code stays in `stagecraft/`.** Product code must never import from `stagecraft/`. Product code may import `@stagecraft/react` or `@stagecraft/vue` (no-ops in production).
 3. **Use the design system.** Before you make a new component, look for an existing one. Use design tokens, not hard-coded colors or spacing.
 4. **Every new endpoint needs a mock.** Add a handler in `stagecraft/mocks.ts` and seed data in `stagecraft/seed.ts`. Check `mock_endpoints` for requests with no mock.
 5. **Every new screen needs its states.** Empty, loading, error, and each product state that changes the screen. Add states to `stagecraft/states.ts`.
 6. **Check your work visually.** After a UI change, call `preview_screenshot` for each changed screen in the states that matter. Fix what you see before you say you are done.
-7. **Options go in variants, not branches.** When asked for options, wrap the region in `<Variant name="..." options={{ A: ..., B: ... }} />` from `@stagecraft/react`.
+7. **Options go in variants, not branches.** When asked for options, wrap the region in `<Variant>` from `@stagecraft/react` (`options={{ A: ..., B: ... }}`) or `@stagecraft/vue` (one named slot per option).
 8. **Do not merge, deploy or make links public.** Those need a human.
 
 ## Where things are
