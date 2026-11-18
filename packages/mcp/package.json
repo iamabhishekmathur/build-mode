@@ -1,0 +1,19 @@
+{
+  "name": "@stagecraft/mcp",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "stagecraft-mcp: MCP server (stdio) that exposes Stagecraft to Claude Code, Codex and Cursor.",
+  "exports": {
+    ".": "./src/server.ts",
+    "./bin": "./src/bin.ts"
+  },
+  "bin": {
+    "stagecraft-mcp": "./src/bin.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "@stagecraft/core": "0.1.0",
+    "@stagecraft/server": "0.1.0",
+    "zod": "^3.25.0"
+  }
+}

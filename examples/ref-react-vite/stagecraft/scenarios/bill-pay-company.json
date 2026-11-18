@@ -1,0 +1,8 @@
+{
+  "$schema": "https://stagecraft.dev/schema/scenario.v1.json",
+  "name": "Bill pay company",
+  "description": "Demo company that pays many vendors. Base for other scenarios.",
+  "persona": "admin",
+  "states": { "approvals": "pending", "agents": "many" },
+  "url": "/"
+}

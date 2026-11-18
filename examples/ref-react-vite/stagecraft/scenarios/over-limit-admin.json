@@ -1,0 +1,8 @@
+{
+  "$schema": "https://stagecraft.dev/schema/scenario.v1.json",
+  "name": "Over-limit admin",
+  "description": "Admin on an account that is over its monthly limit, with two payments waiting.",
+  "persona": "admin",
+  "states": { "account": "over_limit", "approvals": "pending" },
+  "url": "/payments"
+}

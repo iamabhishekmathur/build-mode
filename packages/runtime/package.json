@@ -1,0 +1,19 @@
+{
+  "name": "@stagecraft/runtime",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Browser runtime and preview panel. Injected by the Stagecraft proxy; never imported by product code.",
+  "exports": {
+    ".": "./src/types.ts",
+    "./runtime.js": "./dist/runtime.js"
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --format=iife --target=es2020 --minify --outfile=dist/runtime.js"
+  },
+  "dependencies": {
+    "@stagecraft/core": "0.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12"
+  }
+}

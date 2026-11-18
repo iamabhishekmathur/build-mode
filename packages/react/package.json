@@ -1,0 +1,9 @@
+{
+  "name": "@stagecraft/react",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "React adapter. Safe in production: with no Stagecraft runtime it renders defaults.",
+  "exports": { ".": "./src/index.tsx" },
+  "peerDependencies": { "react": ">=18" },
+  "dependencies": { "@stagecraft/runtime": "0.1.0" }
+}

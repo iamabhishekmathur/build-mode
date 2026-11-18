@@ -1,0 +1,6 @@
+{
+  "$schema": "https://stagecraft.dev/schema/scenario.v1.json",
+  "name": "Bill pay company – frozen",
+  "extends": "Bill pay company",
+  "states": { "account": "frozen" }
+}

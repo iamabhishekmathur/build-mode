@@ -1,0 +1,10 @@
+{
+  "name": "@stagecraft/core",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Shared types, schemas and pure logic for Stagecraft (isomorphic).",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema/*": "./schema/*"
+  }
+}

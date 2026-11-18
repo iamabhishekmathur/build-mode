@@ -1,0 +1,11 @@
+{
+  "$schema": "https://stagecraft.dev/schema/tape.v1.json",
+  "version": 1,
+  "id": "assistant-stream-error",
+  "title": "Answer cuts off, then an error",
+  "events": [
+    { "type": "user_message", "text": "Why did my card spend go up this month?" },
+    { "type": "agent_message", "text": "Card spend went up 18% mainly because of three new software subscriptions and", "cutAt": 70, "tokenDelayMs": 15 },
+    { "type": "error", "code": "upstream_unavailable", "message": "The assistant is unavailable right now. Try again in a minute." }
+  ]
+}

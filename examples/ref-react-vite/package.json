@@ -1,0 +1,25 @@
+{
+  "name": "ref-react-vite",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Reference repo RR-01 (simplified): React + Vite app wired for Stagecraft.",
+  "scripts": {
+    "dev": "vite --port 5174 --strictPort",
+    "build": "vite build",
+    "stagecraft": "node ../../packages/cli/src/bin.ts"
+  },
+  "dependencies": {
+    "@stagecraft/react": "0.1.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.0"
+  },
+  "devDependencies": {
+    "@stagecraft/core": "0.1.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "vite": "^6.3.5"
+  }
+}

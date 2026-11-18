@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "stagecraft": {
+      "command": "npx",
+      "args": [
+        "stagecraft",
+        "mcp"
+      ]
+    }
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stagecraft.dev/schema/tape.v1.json",
+  "title": "Stagecraft tape v1",
+  "description": "A scripted conversation of the product's own AI assistant that plays inside the real UI. The validator in @stagecraft/core (validateTape) is the authority; this schema is for editors.",
+  "type": "object",
+  "required": ["version", "id", "title", "events"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$" },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "scenario": { "type": "string", "description": "Scenario to load before the tape starts." },
+    "events": { "$ref": "#/$defs/segment" },
+    "branches": { "type": "object", "additionalProperties": { "$ref": "#/$defs/segment" } }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "segment": { "type": "array", "items": { "$ref": "#/$defs/event" } },
+    "cond": {
+      "type": "object",
+      "required": ["path"],
+      "properties": { "path": { "type": "string" }, "equals": {}, "in": { "type": "array" }, "exists": { "type": "boolean" } }
+    },
+    "event": {
+      "type": "object",
+      "required": ["type"],
+      "properties": { "label": { "type": "string" } },
+      "oneOf": [
+        { "properties": { "type": { "const": "user_message" }, "text": { "type": "string" } }, "required": ["text"] },
+        {
+          "properties": {
+            "type": { "const": "agent_message" },
+            "text": { "type": "string" },
+            "id": { "type": "string" },
+            "tokenDelayMs": { "type": "number", "minimum": 0 },
+            "chunkSize": { "type": "integer", "minimum": 1 },
+            "cutAt": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["text"]
+        },
+        { "properties": { "type": { "const": "tool_call" }, "id": { "type": "string" }, "name": { "type": "string" }, "input": {} }, "required": ["id", "name"] },
+        { "properties": { "type": { "const": "tool_result" }, "id": { "type": "string" }, "output": {}, "isError": { "type": "boolean" } }, "required": ["id"] },
+        {
+          "properties": { "type": { "const": "pending_action" }, "id": { "type": "string" }, "kind": { "type": "string" }, "title": { "type": "string" }, "data": {}, "actions": { "type": "array", "items": { "type": "string" } } },
+          "required": ["id", "kind", "title"]
+        },
+        { "properties": { "type": { "const": "state_change" }, "patch": { "type": "object" } }, "required": ["patch"] },
+        { "properties": { "type": { "const": "delay" }, "ms": { "type": "number", "minimum": 0 } }, "required": ["ms"] },
+        { "properties": { "type": { "const": "error" }, "message": { "type": "string" }, "code": { "type": "string" } }, "required": ["message"] },
+        { "properties": { "type": { "const": "timeout" }, "afterMs": { "type": "number", "minimum": 0 } }, "required": ["afterMs"] },
+        {
+          "properties": {
+            "type": { "const": "branch" },
+            "cases": {
+              "type": "array",
+              "items": { "type": "object", "required": ["when", "goto"], "properties": { "when": { "$ref": "#/$defs/cond" }, "goto": { "type": "string" }, "label": { "type": "string" } } }
+            },
+            "default": { "type": "string" },
+            "timeoutMs": { "type": "number", "minimum": 0 }
+          },
+          "required": ["cases"]
+        }
+      ]
+    }
+  }
+}

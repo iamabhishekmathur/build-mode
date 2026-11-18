@@ -1,0 +1,210 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z } from 'zod';
+import { validateTape } from '@stagecraft/core';
+import { detect, findConfig, loadConfig } from '@stagecraft/server';
+
+/**
+ * Tool names use underscores, not the dots in the PRD (`state.set`).
+ * The Anthropic and OpenAI APIs only allow [a-zA-Z0-9_-] in tool names.
+ */
+export interface McpOptions {
+  /** Proxy base URL. Default: STAGECRAFT_URL, else http://127.0.0.1:<config port>. */
+  baseUrl?: string;
+  cwd?: string;
+}
+
+type Content = { type: 'text'; text: string } | { type: 'image'; data: string; mimeType: string };
+const text = (v: unknown): { content: Content[] } => ({ content: [{ type: 'text', text: typeof v === 'string' ? v : JSON.stringify(v, null, 2) }] });
+const fail = (msg: string) => ({ content: [{ type: 'text' as const, text: JSON.stringify({ error: msg }) }], isError: true });
+
+export async function resolveBaseUrl(opts: McpOptions): Promise<{ baseUrl: string; root: string | null }> {
+  const cwd = opts.cwd ?? process.cwd();
+  const file = findConfig(cwd);
+  if (opts.baseUrl) return { baseUrl: opts.baseUrl, root: file ? join(file, '..') : null };
+  if (process.env.STAGECRAFT_URL) return { baseUrl: process.env.STAGECRAFT_URL, root: file ? join(file, '..') : null };
+  if (!file) return { baseUrl: 'http://127.0.0.1:4400', root: null };
+  try {
+    const { config, root } = await loadConfig(file);
+    return { baseUrl: `http://127.0.0.1:${config.port}`, root };
+  } catch {
+    return { baseUrl: 'http://127.0.0.1:4400', root: join(file, '..') };
+  }
+}
+
+export async function createMcpServer(opts: McpOptions = {}) {
+  const { baseUrl, root } = await resolveBaseUrl(opts);
+  const server = new McpServer({ name: 'stagecraft', version: '0.1.0' });
+
+  async function call(method: string, path: string, body?: unknown, session?: string) {
+    let res: Response;
+    try {
+      res = await fetch(`${baseUrl}/__stagecraft/api${path}`, {
+        method,
+        headers: { 'content-type': 'application/json', ...(session ? { 'x-stagecraft-session': session } : {}) },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    } catch {
+      throw new Error(`Stagecraft proxy is not running at ${baseUrl}. Start it with "npx stagecraft dev" in the repo, then retry.`);
+    }
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`);
+    return data;
+  }
+
+  const session = z.string().optional().describe('Session id. Default "main" (what the user sees).');
+  const tool = <S extends z.ZodRawShape>(name: string, description: string, shape: S, fn: (args: z.objectOutputType<S, z.ZodTypeAny>) => Promise<unknown>) =>
+    server.registerTool(name, { description, inputSchema: shape }, (async (args: any) => {
+      try {
+        const out = await fn(args);
+        return out && typeof out === 'object' && 'content' in (out as object) ? out : text(out);
+      } catch (e) {
+        return fail((e as Error).message);
+      }
+    }) as any);
+
+  tool('setup_detect', 'Detect the repo stack (framework, package manager, dev command, router, API style, flags, design system, Storybook).', {}, async () => {
+    if (!root) throw new Error('No stagecraft.config.ts found. Run "npx stagecraft init" first.');
+    return detect(root);
+  });
+
+  tool('session_get', 'Current persona, states, flags, variants, faults, scenario and tape for a session, plus a shareable link.', { session }, (a) => call('GET', '/session', undefined, a.session));
+
+  tool('state_catalog', 'List personas, entity states, flags, variants seen in the page, scenarios, tapes and mocked endpoints.', {}, () => call('GET', '/catalog'));
+
+  tool(
+    'state_set',
+    'Select product states, e.g. {"account":"frozen"}. Applies the state DB patch. Re-selecting the current state does nothing.',
+    { states: z.record(z.string()).describe('entity → state name'), session },
+    (a) => call('PATCH', '/session', { states: a.states }, a.session),
+  );
+
+  tool('persona_set', 'Switch the signed-in persona (role). The mock DB is kept.', { persona: z.string(), session }, (a) => call('PATCH', '/session', { persona: a.persona }, a.session));
+
+  tool('flags_list', 'Feature flags: definitions and effective values.', { session }, async (a) => {
+    const [cat, s] = await Promise.all([call('GET', '/catalog'), call('GET', '/session', undefined, a.session)]);
+    return Object.fromEntries(Object.entries(cat.flags).map(([k, def]) => [k, { ...(def as object), value: s.flags[k], overridden: k in s.state.flags }]));
+  });
+
+  tool('flags_set', 'Override flags for this prototype session. Use null to clear an override.', { flags: z.record(z.any()), session }, (a) => call('PATCH', '/session', { flags: a.flags }, a.session));
+
+  tool('variant_list', 'Variants registered by <Variant>/useVariant in the page, with the selected option. The page must have rendered them once.', { session }, async (a) => {
+    const [cat, s] = await Promise.all([call('GET', '/catalog'), call('GET', '/session', undefined, a.session)]);
+    return Object.fromEntries(Object.entries(cat.variants as Record<string, string[]>).map(([k, opts]) => [k, { options: opts, selected: s.state.variants[k] ?? opts[0] }]));
+  });
+
+  tool('variant_select', 'Show one option of a variant.', { name: z.string(), option: z.string(), session }, (a) => call('PATCH', '/session', { variants: { [a.name]: a.option } }, a.session));
+
+  tool(
+    'scenario_save',
+    'Save the current setup (persona, states, flags, variants, faults, mock DB snapshot) to stagecraft/scenarios/<name>.json.',
+    { name: z.string(), description: z.string().optional(), url: z.string().optional().describe('Route to open, e.g. /settings/agents'), extends: z.string().optional(), includeDb: z.boolean().optional(), session },
+    (a) => call('POST', '/scenarios', { name: a.name, description: a.description, url: a.url, extends: a.extends, includeDb: a.includeDb }, a.session),
+  );
+
+  tool('scenario_load', 'Load a saved scenario into the session.', { name: z.string(), session }, (a) => call('POST', '/scenarios/load', { name: a.name }, a.session));
+
+  tool('scenario_list', 'List saved scenarios.', {}, () => call('GET', '/scenarios'));
+
+  tool('mockdb_query', 'Read the mock DB. Path syntax: account.status, users[id=u2].onboardingStep, payments[0].', { path: z.string().optional(), session }, (a) =>
+    call('GET', `/mockdb${a.path ? `?path=${encodeURIComponent(a.path)}` : ''}`, undefined, a.session),
+  );
+
+  tool(
+    'mockdb_seed',
+    'Write to the mock DB. `patch` maps paths to values or ops ({"$push":x}, {"$merge":{}}, {"$remove":true}, {"$inc":n}). `replace` swaps the whole DB.',
+    { patch: z.record(z.any()).optional(), replace: z.any().optional(), session },
+    (a) => call('POST', '/mockdb/seed', { patch: a.patch, replace: a.replace }, a.session),
+  );
+
+  tool('mockdb_reset', 'Reset the mock DB to seed + the selected states.', { session }, (a) => call('POST', '/mockdb/reset', undefined, a.session));
+
+  tool('mock_endpoints', 'Mocked endpoints, the tape endpoint, and requests the app made that have no mock yet.', {}, () => call('GET', '/endpoints'));
+
+  tool(
+    'fault_set',
+    'Replace the fault rules: latency, error status or no response per endpoint. Empty list clears faults.',
+    {
+      faults: z.array(z.object({ endpoint: z.string().describe('e.g. "GET /api/payments"'), latencyMs: z.number().optional(), status: z.number().optional(), timeout: z.boolean().optional(), body: z.any().optional() })),
+      session,
+    },
+    (a) => call('PATCH', '/session', { faults: a.faults }, a.session),
+  );
+
+  tool('tape_validate', 'Validate a tape JSON object. Returns issues with JSON paths.', { tape: z.any() }, async (a) => {
+    const issues = validateTape(a.tape);
+    return { valid: issues.length === 0, issues };
+  });
+
+  tool(
+    'tape_create',
+    'Validate and save a tape to stagecraft/tapes/<id>.json. Events: user_message, agent_message, tool_call, tool_result, pending_action, state_change, delay, error, timeout, branch. See the make-tape skill.',
+    { tape: z.any() },
+    (a) => call('POST', '/tapes', { tape: a.tape }),
+  );
+
+  tool(
+    'tape_play',
+    'Load a tape in the session. `at` is a step ("4" or "approved:2"); with `at` the tape pauses there.',
+    { id: z.string(), at: z.string().optional(), autoplay: z.boolean().optional(), session },
+    (a) => call('POST', '/tape/load', { id: a.id, at: a.at, autoplay: a.autoplay }, a.session),
+  );
+
+  tool('tape_control', 'Control the loaded tape: play, pause, step or stop.', { action: z.enum(['play', 'pause', 'step', 'stop']), session }, (a) =>
+    call('POST', '/tape/control', { action: a.action }, a.session),
+  );
+
+  tool('preview_url', 'URL of the running prototype, and a link that reproduces the current state.', { path: z.string().optional(), session }, async (a) => {
+    const s = await call('GET', `/session?path=${encodeURIComponent(a.path ?? '/')}`, undefined, a.session);
+    return { baseUrl, link: baseUrl + s.link };
+  });
+
+  tool('preview_navigate', 'Navigate the open browser tabs of a session to a route.', { path: z.string(), session }, (a) => call('POST', '/navigate', { url: a.path }, a.session));
+
+  tool(
+    'preview_screenshot',
+    'Screenshot a route in a forked copy of the session (the user\'s view is not changed). Optionally load a scenario first. Returns a PNG.',
+    {
+      path: z.string().default('/'),
+      scenario: z.string().optional(),
+      width: z.number().default(1280),
+      height: z.number().default(800),
+      fullPage: z.boolean().default(false),
+      theme: z.enum(['light', 'dark']).optional(),
+      session,
+    },
+    async (a) => {
+      let chromium;
+      try {
+        const mod = 'playwright';
+        ({ chromium } = (await import(mod)) as typeof import('playwright'));
+      } catch {
+        throw new Error('Playwright is not installed. Run "npm i -D playwright" and "npx playwright install chromium".');
+      }
+      const u = new URL(a.path, baseUrl);
+      u.searchParams.set('__sc_session', `fork:${a.session ?? 'main'}`);
+      u.searchParams.set('sc_panel', '0');
+      if (a.scenario) u.searchParams.set('sc_scenario', a.scenario);
+      const browser = await chromium.launch();
+      try {
+        const page = await browser.newPage({ viewport: { width: a.width, height: a.height }, colorScheme: a.theme ?? 'light', reducedMotion: 'reduce' });
+        await page.goto(u.href, { waitUntil: 'networkidle' });
+        await page.waitForTimeout(150);
+        const png = await page.screenshot({ fullPage: a.fullPage, animations: 'disabled' });
+        let file: string | undefined;
+        if (root) {
+          const dir = join(root, '.stagecraft-cache', 'screenshots');
+          mkdirSync(dir, { recursive: true });
+          file = join(dir, `${Date.now()}-${a.path.replace(/[^a-z0-9]+/gi, '_')}.png`);
+          writeFileSync(file, png);
+        }
+        return { content: [{ type: 'image', data: png.toString('base64'), mimeType: 'image/png' }, { type: 'text', text: JSON.stringify({ url: u.href, file }) }] };
+      } finally {
+        await browser.close();
+      }
+    },
+  );
+
+  return { server, baseUrl };
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://stagecraft.dev/schema/tape.v1.json",
+  "version": 1,
+  "id": "vendor-payment-approval",
+  "title": "$4,200 vendor payment needs approval (times out once)",
+  "description": "J-7: the assistant prepares a payment over the auto-approve limit. The payment service times out once; the UI retries. An admin approves or rejects in the real UI.",
+  "events": [
+    { "type": "user_message", "text": "Pay Acme Tools $4,200 for the October invoice." },
+    { "type": "agent_message", "text": "Sure. I'll set up a $4,200 payment to Acme Tools.", "tokenDelayMs": 20 },
+    { "type": "tool_call", "id": "t1", "name": "create_payment", "input": { "vendor": "Acme Tools", "amount": 4200 } },
+    { "type": "timeout", "afterMs": 1500, "label": "Payment service times out" },
+    { "type": "agent_message", "text": "The payment service was slow. I tried again and it worked.", "tokenDelayMs": 15 },
+    { "type": "tool_result", "id": "t1", "output": { "paymentId": "p9", "status": "pending_approval" } },
+    {
+      "type": "state_change",
+      "label": "Payment p9 created",
+      "patch": { "payments": { "$push": { "id": "p9", "vendor": "Acme Tools", "amount": 4200, "status": "pending_approval", "requestedBy": "u2", "date": "2026-11-17" } } }
+    },
+    { "type": "agent_message", "text": "This payment is over the $2,500 auto-approve limit, so an admin must approve it.", "tokenDelayMs": 15 },
+    { "type": "pending_action", "id": "a1", "kind": "approve_payment", "title": "Approve $4,200 to Acme Tools?", "data": { "paymentId": "p9", "vendor": "Acme Tools", "amount": 4200 } },
+    {
+      "type": "branch",
+      "label": "Wait for approve or reject",
+      "cases": [
+        { "when": { "path": "payments[id=p9].status", "equals": "approved" }, "goto": "approved", "label": "Approved" },
+        { "when": { "path": "payments[id=p9].status", "equals": "rejected" }, "goto": "rejected", "label": "Rejected" }
+      ]
+    }
+  ],
+  "branches": {
+    "approved": [
+      { "type": "tool_call", "id": "t2", "name": "schedule_payment", "input": { "paymentId": "p9", "date": "today" } },
+      { "type": "tool_result", "id": "t2", "output": { "scheduled": true } },
+      { "type": "agent_message", "text": "Approved and scheduled. Acme Tools will be paid today.", "tokenDelayMs": 15 }
+    ],
+    "rejected": [
+      { "type": "agent_message", "text": "OK. I cancelled the payment and told Eli why.", "tokenDelayMs": 15 }
+    ]
+  }
+}

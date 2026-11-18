@@ -1,0 +1,28 @@
+{
+  "name": "stagecraft-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @stagecraft/runtime",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:e2e": "npm run build && vitest run tests/e2e",
+    "demo": "npm run build && cd examples/ref-react-vite && node ../../packages/cli/src/bin.ts dev"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.18.2",
+    "playwright": "^1.63.0",
+    "typescript": "~5.9.3",
+    "vitest": "^3.2.4",
+    "ws": "^8.23.0"
+  }
+}
