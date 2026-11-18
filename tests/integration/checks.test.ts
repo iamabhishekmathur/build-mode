@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { checkComponents, checkFast, checkHandoff, checkVisual, describePr, launch, openCell, renderMatrix, VIEWPORTS } from '@stagecraft/checks';
 import { startServer, type StagecraftServer } from '@stagecraft/server';
-import { fixture } from '../helpers.ts';
+import { fixture, REPO as REPO_ROOT } from '../helpers.ts';
 
 /** Seeded visual bugs (PRD GD-4, small): one planted bug per page + a clean control page. */
 const PAGES: Record<string, { html: string; expect: string | null }> = {
@@ -190,5 +190,39 @@ describe('scenario clock', () => {
     const bad = await fetch(`${base}/__stagecraft/api/session`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ clock: 'tomorrow' }) });
     expect(bad.status).toBe(400);
     await fetch(`${base}/__stagecraft/api/session`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ clock: null }) });
+  });
+});
+
+describe('Figma fidelity (FR-1002) and token map (FR-1203)', () => {
+  it('scores an identical frame 100 and finds the region that changed', async () => {
+    const { checkFigma } = await import('@stagecraft/checks');
+    const browser = await launch();
+    const refFile = join(root, 'frame.png');
+    try {
+      const { page } = await openCell(browser, `${base}/clean?sc_panel=0`, { viewport: { width: 600, height: 400 } });
+      writeFileSync(refFile, await page.screenshot({ clip: { x: 0, y: 0, width: 600, height: 400 } }));
+      await page.close();
+    } finally {
+      await browser.close();
+    }
+    const same = await checkFigma({ base, root, route: '/clean', reference: refFile });
+    expect(same.score).toBe(100);
+    expect(same.regions).toEqual([]);
+    const other = await checkFigma({ base, root, route: '/overlap', reference: refFile });
+    expect(other.score).toBeLessThan(100);
+    expect(other.regions.length).toBeGreaterThan(0);
+    for (const f of Object.values(other.images)) expect(existsSync(f)).toBe(true);
+  }, 60000);
+
+  it('maps Figma variables to CSS and TS tokens by value and lists the rest', async () => {
+    const { codeTokens, flattenVars, mapTokens } = await import('@stagecraft/checks');
+    const { EXAMPLE } = await import('../helpers.ts');
+    const vars = flattenVars({ color: { brand: { primary: '#2F43D6' }, text: { default: 'rgb(28, 28, 30)' }, accent: '#FF00AA' }, spacing: { '4': '16px' } });
+    expect(Object.keys(vars)).toEqual(['color/brand/primary', 'color/text/default', 'color/accent', 'spacing/4']);
+    const map = mapTokens(vars, codeTokens([join(EXAMPLE, 'src'), join(REPO_ROOT, 'examples/multi-repo/acme-ui/src')], EXAMPLE));
+    expect(map.mapped.find((m) => m.figma === 'color/brand/primary')?.code).toBe('--color-brand');
+    expect(map.mapped.find((m) => m.figma === 'color/text/default')?.code).toBe('--color-text');
+    expect(map.mapped.find((m) => m.figma === 'spacing/4')?.code).toBe('--space-4');
+    expect(map.unmapped).toEqual([{ figma: 'color/accent', value: '#FF00AA' }]);
   });
 });

@@ -10,7 +10,7 @@ import { GITHUB_HELP, githubCommand } from './github.ts';
 import { init } from './init.ts';
 import { mocksCommand } from './generate/index.ts';
 import { loadRepos, workspaceCommand } from './workspace.ts';
-import { checkCommand, describeCommand, matrixCommand } from './checks.ts';
+import { checkCommand, describeCommand, matrixCommand, tokensCommand } from './checks.ts';
 import { shareCommand } from './share.ts';
 import { hookCommand } from './hook.ts';
 import { discoverCommand } from './discover.ts';
@@ -32,6 +32,10 @@ Usage:
                                   library packages, one prototype branch across repos
   stagecraft check fast|components|a11y|visual|handoff
                                   Checks on your own work (see --help of each); exit 1 on errors
+  stagecraft check figma --reference frame.png --route /x
+                                  Fidelity vs a Figma frame export: score 0–100, regions, diff image
+  stagecraft tokens --figma vars.json
+                                  Map Figma variables to code tokens; list variables with no token
   stagecraft matrix <route> [--viewports desktop,phone] [--cells cells.json]
                                   Grid of screenshots across states/personas/viewports
   stagecraft describe [--gate]    PR description: screens, states, scenarios, tapes, backend work, gate
@@ -87,6 +91,8 @@ async function main() {
       return describeCommand(cwd, args, log);
     case 'share':
       return shareCommand(cwd, sub, rest, log);
+    case 'tokens':
+      return tokensCommand(cwd, args, log);
     case 'hook':
       return hookCommand(cwd, sub, log);
     case 'guide':

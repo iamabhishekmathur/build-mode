@@ -4,3 +4,4 @@ export * from './components.ts';
 export * from './browser.ts';
 export * from './visual.ts';
 export * from './handoff.ts';
+export * from './figma.ts';

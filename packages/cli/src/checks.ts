@@ -56,6 +56,8 @@ export async function checkCommand(cwd: string, kind: string | undefined, args: 
       r = await checkVisual({ base, root, routes, cells: cellsFrom(args) });
       break;
     }
+    case 'figma':
+      return figmaCommand(cwd, args, log);
     case 'handoff':
       r = await checkHandoff(root, { skipBuild: args.includes('--skip-build'), skipTests: args.includes('--skip-tests') });
       break;
@@ -79,4 +81,36 @@ export async function describeCommand(cwd: string, args: string[], log: (m: stri
   const gate = args.includes('--gate') ? await checkHandoff(root, { skipBuild: args.includes('--skip-build'), skipTests: args.includes('--skip-tests') }) : undefined;
   log(await describePr(root, { gate }));
   return 0;
+}
+
+/** `stagecraft check figma --reference frame.png --route /x` and `stagecraft tokens --figma vars.json`. */
+export async function figmaCommand(cwd: string, args: string[], log: (m: string) => void): Promise<number> {
+  const { checkFigma } = await import('@stagecraft/checks');
+  const ref = flag(args, '--reference');
+  if (!ref) throw new Error('Usage: stagecraft check figma --reference <frame.png> --route </path> [--json]');
+  const { base, root } = await proxyBase(cwd);
+  const r = await checkFigma({ base, root, route: flag(args, '--route') ?? '/', reference: ref });
+  if (args.includes('--json')) log(JSON.stringify(r, null, 2));
+  else {
+    log(`Figma fidelity ${r.score}/100 (${r.regions.length} regions differ)`);
+    for (const f of r.findings) log(`  ${f.severity === 'error' ? '✗' : '!'} ${f.message}`);
+    log(`  images: ${r.images.reference}, ${r.images.actual}, ${r.images.diff}`);
+  }
+  return 0;
+}
+
+export async function tokensCommand(cwd: string, args: string[], log: (m: string) => void): Promise<number> {
+  const { codeTokens, flattenVars, mapTokens, tokenDirs } = await import('@stagecraft/checks');
+  const { writeFileSync } = await import('node:fs');
+  const { join } = await import('node:path');
+  const file = flag(args, '--figma');
+  if (!file) throw new Error('Usage: stagecraft tokens --figma <variables.json>   (output of the Figma MCP get_variable_defs, or a variables export)');
+  const root = findConfig(cwd) ? (await loadConfig(findConfig(cwd)!)).root : cwd;
+  const dirs = tokenDirs(root);
+  const map = mapTokens(flattenVars(JSON.parse(readFileSync(file, 'utf8'))), codeTokens(dirs, root));
+  writeFileSync(join(root, 'stagecraft', 'token-map.json'), JSON.stringify(map, null, 2) + '\n');
+  log(`${map.mapped.length} Figma variables map to code tokens; ${map.unmapped.length} have no matching token.`);
+  for (const u of map.unmapped) log(`  ✗ ${u.figma} = ${u.value}: no code token has this value. Add a token (design-system work) or fix the Figma variable.`);
+  log('Wrote stagecraft/token-map.json');
+  return map.unmapped.length ? 1 : 0;
 }

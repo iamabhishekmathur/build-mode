@@ -5,7 +5,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { validateTape } from '@stagecraft/core';
 import { registerGithubTools } from '@stagecraft/github';
-import { checkA11y, checkComponents, checkFast, checkHandoff, checkVisual, describePr, renderMatrix, VIEWPORTS } from '@stagecraft/checks';
+import { checkA11y, checkComponents, checkFast, checkFigma, checkHandoff, checkVisual, codeTokens, describePr, flattenVars, mapTokens, renderMatrix, tokenDirs, VIEWPORTS } from '@stagecraft/checks';
 import { readFileSync as readFileSyncFs } from 'node:fs';
 import { detect, findConfig, loadConfig, resolveWorkspace, settle, workspaceStatus } from '@stagecraft/server';
 
@@ -216,6 +216,21 @@ export async function createMcpServer(opts: McpOptions = {}) {
       return { content };
     },
   );
+
+  tool(
+    'check_figma',
+    'Compare a route with a Figma frame (FR-1002): pass the frame exported as PNG at 1x (Figma MCP get_screenshot, or an export). Returns a 0–100 pixel-similarity score, the regions that differ, and reference/actual/diff images. Judge layout, spacing, type, color and components from the images.',
+    { reference: z.string().describe('PNG path, relative to the repo'), route: z.string().default('/'), cell: z.any().optional() },
+    async (a) => {
+      const r = await checkFigma({ base: baseUrl, root: needRoot(), route: a.route, reference: join(needRoot(), a.reference), cell: a.cell });
+      return { content: [{ type: 'text', text: JSON.stringify({ score: r.score, regions: r.regions.slice(0, 12), findings: r.findings }, null, 2) }, png(r.images.reference), png(r.images.actual), png(r.images.diff)] };
+    },
+  );
+
+  tool('tokens_map', 'Map Figma variables (the object from Figma MCP get_variable_defs) to the code\'s design tokens by value (FR-1203). Lists variables with no matching token.', { variables: z.record(z.any()) }, async (a) => {
+    const r = needRoot();
+    return mapTokens(flattenVars(a.variables), codeTokens(tokenDirs(r), r));
+  });
 
   tool('check_a11y', 'Accessibility scan with axe-core, WCAG 2.2 A/AA (FR-1004). Returns violations with selectors.', { routes: z.array(z.string()).default(['/']), cells: cellShape }, async (a) =>
     checkA11y({ base: baseUrl, root: needRoot(), routes: a.routes, cells: cellsOf(a.cells) }),
