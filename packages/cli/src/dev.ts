@@ -29,7 +29,7 @@ async function waitFor(url: string, ms: number) {
 
 export async function dev(cwd: string, opts: { port?: number; noDevServer?: boolean; noLink?: boolean; host?: string }) {
   const file = findConfig(cwd);
-  if (!file) throw new Error('No stagecraft.config.ts. Run "npx stagecraft init".');
+  if (!file) throw new Error('No stagecraft.config.ts. Run "npx --no stagecraft init".');
   const root = join(file, '..');
   const { engine, server, url, apps } = await startServer(file, { port: opts.port, host: opts.host });
   const children: ChildProcess[] = [];

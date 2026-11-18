@@ -1,0 +1,401 @@
+[
+  {
+    "taskId": "T-SET-01",
+    "title": "Set up a React + Vite app from scratch (Ledgerly)",
+    "category": "setup",
+    "pass": false,
+    "checks": [
+      {
+        "id": "renders /",
+        "pass": false,
+        "detail": "pageerror: Cannot read properties of undefined (reading 'toLocaleString') | "
+      },
+      {
+        "id": "renders /payments",
+        "pass": true
+      },
+      {
+        "id": "renders /onboarding",
+        "pass": true
+      },
+      {
+        "id": "renders /settings/agents",
+        "pass": true
+      },
+      {
+        "id": "no unmocked API calls",
+        "pass": false,
+        "detail": "GET /api/payments"
+      },
+      {
+        "id": "doctor: no errors",
+        "pass": true
+      },
+      {
+        "id": "typecheck",
+        "pass": true
+      },
+      {
+        "id": "employee persona shows in the UI",
+        "pass": false,
+        "detail": "no persona like /employee/i; have admin, member"
+      },
+      {
+        "id": "frozen state changes the UI",
+        "pass": false,
+        "detail": "account=frozen: pageerror: Cannot read properties of undefined (reading 'toLocaleString')"
+      },
+      {
+        "id": "cross-origin API mocked (agents page)",
+        "pass": false,
+        "detail": "Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nAda Admin · admin\nAssistant\n\nCould not load agents: Failed to fetch"
+      }
+    ],
+    "agent": {
+      "ok": true,
+      "turns": 0,
+      "costUsd": 0,
+      "durationMs": 0,
+      "toolCalls": 0,
+      "toolsUsed": {},
+      "skillsUsed": [],
+      "screenshots": 0,
+      "permissionDenials": [],
+      "mcpConnected": false,
+      "finalMessage": "(dry run: no agent)",
+      "timedOut": false
+    },
+    "changedFiles": {
+      "ref-react-vite": [
+        ".agents/skills/stagecraft-add-state/SKILL.md",
+        ".agents/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".agents/skills/stagecraft-build-screen/SKILL.md",
+        ".agents/skills/stagecraft-create-variant/SKILL.md",
+        ".agents/skills/stagecraft-handoff/SKILL.md",
+        ".agents/skills/stagecraft-make-tape/SKILL.md",
+        ".agents/skills/stagecraft-self-check/SKILL.md",
+        ".agents/skills/stagecraft-setup/SKILL.md",
+        ".claude/settings.json",
+        ".claude/skills/stagecraft-add-state/SKILL.md",
+        ".claude/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".claude/skills/stagecraft-build-screen/SKILL.md",
+        ".claude/skills/stagecraft-create-variant/SKILL.md",
+        ".claude/skills/stagecraft-handoff/SKILL.md",
+        ".claude/skills/stagecraft-make-tape/SKILL.md",
+        ".claude/skills/stagecraft-self-check/SKILL.md",
+        ".claude/skills/stagecraft-setup/SKILL.md",
+        ".codex/config.toml",
+        ".cursor/mcp.json",
+        ".cursor/rules/stagecraft.mdc",
+        ".cursor/skills/stagecraft-add-state/SKILL.md",
+        ".cursor/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".cursor/skills/stagecraft-build-screen/SKILL.md",
+        ".cursor/skills/stagecraft-create-variant/SKILL.md",
+        ".cursor/skills/stagecraft-handoff/SKILL.md",
+        ".cursor/skills/stagecraft-make-tape/SKILL.md",
+        ".cursor/skills/stagecraft-self-check/SKILL.md",
+        ".cursor/skills/stagecraft-setup/SKILL.md",
+        ".env.stagecraft",
+        ".mcp.json",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "stagecraft.config.ts",
+        "stagecraft.detect.json",
+        "stagecraft/agents.md",
+        "stagecraft/mocks.ts",
+        "stagecraft/scenarios/.gitkeep",
+        "stagecraft/seed.ts",
+        "stagecraft/skills/add-state/SKILL.md",
+        "stagecraft/skills/apply-figma-frame/SKILL.md",
+        "stagecraft/skills/build-screen/SKILL.md",
+        "stagecraft/skills/create-variant/SKILL.md",
+        "stagecraft/skills/handoff/SKILL.md",
+        "stagecraft/skills/make-tape/SKILL.md",
+        "stagecraft/skills/self-check/SKILL.md",
+        "stagecraft/skills/setup/SKILL.md",
+        "stagecraft/states.ts",
+        "stagecraft/tapes/.gitkeep"
+      ]
+    },
+    "doctorWarnings": [
+      "Endpoints in code with no mock:\n    /api/assistant/stream  (src/Assistant.tsx)\n    /api/payments  (src/Assistant.tsx)\n    /api/payments/:param/:param  (src/Assistant.tsx)\n    /api/payments  (src/pages/Dashboard.tsx)\n    /api/onboarding/complete-step  (src/pages/Onboarding.tsx)\n    /api/payments  (src/pages/Payments.tsx)\n    /api/payments/:param/:param  (src/pages/Payments.tsx)"
+    ],
+    "screenshots": [
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-01/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-01/_payments.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-01/_onboarding.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-01/_settings_agents.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-01/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-01/_settings_agents.png"
+    ],
+    "workdir": "/home/user/build-mode/tests/.tmp/evals/T-SET-01-mwlroqzp",
+    "startedAt": "2026-11-18T06:55:38.917Z"
+  },
+  {
+    "taskId": "T-SET-02",
+    "title": "Set up a Next.js App Router app from scratch (Acme Billing)",
+    "category": "setup",
+    "pass": false,
+    "checks": [
+      {
+        "id": "renders /",
+        "pass": false,
+        "detail": "HTTP 500 http://127.0.0.1:4400/?__sc_session=fork&sc_panel=0 | pageerror: fetch failed | document HTTP 500 | framework error overlay shown | "
+      },
+      {
+        "id": "renders /settings",
+        "pass": false,
+        "detail": "HTTP 500 http://127.0.0.1:4400/settings?__sc_session=fork&sc_panel=0 | pageerror: fetch failed | document HTTP 500 | framework error overlay shown | "
+      },
+      {
+        "id": "no unmocked API calls",
+        "pass": true
+      },
+      {
+        "id": "doctor: no errors",
+        "pass": true
+      },
+      {
+        "id": "typecheck",
+        "pass": true
+      },
+      {
+        "id": "server-rendered data comes from mocks",
+        "pass": false,
+        "detail": ""
+      },
+      {
+        "id": "viewer persona shows in the UI",
+        "pass": false,
+        "detail": "no persona like /viewer|read.?only/i; have admin, member"
+      },
+      {
+        "id": "past-due state changes the UI",
+        "pass": false,
+        "detail": "no state like /past.?due/i"
+      }
+    ],
+    "agent": {
+      "ok": true,
+      "turns": 0,
+      "costUsd": 0,
+      "durationMs": 0,
+      "toolCalls": 0,
+      "toolsUsed": {},
+      "skillsUsed": [],
+      "screenshots": 0,
+      "permissionDenials": [],
+      "mcpConnected": false,
+      "finalMessage": "(dry run: no agent)",
+      "timedOut": false
+    },
+    "changedFiles": {
+      "ref-next-app": [
+        "AGENTS.md",
+        ".agents/skills/stagecraft-add-state/SKILL.md",
+        ".agents/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".agents/skills/stagecraft-build-screen/SKILL.md",
+        ".agents/skills/stagecraft-create-variant/SKILL.md",
+        ".agents/skills/stagecraft-handoff/SKILL.md",
+        ".agents/skills/stagecraft-make-tape/SKILL.md",
+        ".agents/skills/stagecraft-self-check/SKILL.md",
+        ".agents/skills/stagecraft-setup/SKILL.md",
+        ".claude/settings.json",
+        ".claude/skills/stagecraft-add-state/SKILL.md",
+        ".claude/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".claude/skills/stagecraft-build-screen/SKILL.md",
+        ".claude/skills/stagecraft-create-variant/SKILL.md",
+        ".claude/skills/stagecraft-handoff/SKILL.md",
+        ".claude/skills/stagecraft-make-tape/SKILL.md",
+        ".claude/skills/stagecraft-self-check/SKILL.md",
+        ".claude/skills/stagecraft-setup/SKILL.md",
+        ".codex/config.toml",
+        ".cursor/mcp.json",
+        ".cursor/rules/stagecraft.mdc",
+        ".cursor/skills/stagecraft-add-state/SKILL.md",
+        ".cursor/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".cursor/skills/stagecraft-build-screen/SKILL.md",
+        ".cursor/skills/stagecraft-create-variant/SKILL.md",
+        ".cursor/skills/stagecraft-handoff/SKILL.md",
+        ".cursor/skills/stagecraft-make-tape/SKILL.md",
+        ".cursor/skills/stagecraft-self-check/SKILL.md",
+        ".cursor/skills/stagecraft-setup/SKILL.md",
+        ".env.stagecraft",
+        ".mcp.json",
+        "CLAUDE.md",
+        "stagecraft.config.ts",
+        "stagecraft.detect.json",
+        "stagecraft/agents.md",
+        "stagecraft/mocks.ts",
+        "stagecraft/scenarios/.gitkeep",
+        "stagecraft/seed.ts",
+        "stagecraft/skills/add-state/SKILL.md",
+        "stagecraft/skills/apply-figma-frame/SKILL.md",
+        "stagecraft/skills/build-screen/SKILL.md",
+        "stagecraft/skills/create-variant/SKILL.md",
+        "stagecraft/skills/handoff/SKILL.md",
+        "stagecraft/skills/make-tape/SKILL.md",
+        "stagecraft/skills/self-check/SKILL.md",
+        "stagecraft/skills/setup/SKILL.md",
+        "stagecraft/states.ts",
+        "stagecraft/tapes/.gitkeep"
+      ]
+    },
+    "doctorWarnings": [],
+    "screenshots": [
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-02/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-02/_settings.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-02/_.png"
+    ],
+    "workdir": "/home/user/build-mode/tests/.tmp/evals/T-SET-02-mwlrp4m8",
+    "startedAt": "2026-11-18T06:55:56.576Z"
+  },
+  {
+    "taskId": "T-STATE-01",
+    "title": "Add a \"Payment hold\" state (prepared repo)",
+    "category": "state",
+    "pass": false,
+    "checks": [
+      {
+        "id": "renders /",
+        "pass": true
+      },
+      {
+        "id": "renders /payments",
+        "pass": true
+      },
+      {
+        "id": "no unmocked API calls",
+        "pass": true
+      },
+      {
+        "id": "doctor: no errors",
+        "pass": true
+      },
+      {
+        "id": "typecheck",
+        "pass": true
+      },
+      {
+        "id": "scenario file saved",
+        "pass": false
+      },
+      {
+        "id": "notice shown in scenario",
+        "pass": false,
+        "detail": "document HTTP 404"
+      },
+      {
+        "id": "approve disabled or hidden in scenario",
+        "pass": false,
+        "detail": "document HTTP 404"
+      },
+      {
+        "id": "mock blocks approve during hold",
+        "pass": false
+      }
+    ],
+    "agent": {
+      "ok": true,
+      "turns": 0,
+      "costUsd": 0,
+      "durationMs": 0,
+      "toolCalls": 0,
+      "toolsUsed": {},
+      "skillsUsed": [],
+      "screenshots": 0,
+      "permissionDenials": [],
+      "mcpConnected": false,
+      "finalMessage": "(dry run: no agent)",
+      "timedOut": false
+    },
+    "changedFiles": {
+      "ref-react-vite": []
+    },
+    "doctorWarnings": [],
+    "screenshots": [
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-STATE-01/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-STATE-01/_payments.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-STATE-01/_payments-payment-hold-admin.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-STATE-01/_payments-payment-hold-admin.png"
+    ],
+    "workdir": "/home/user/build-mode/tests/.tmp/evals/T-STATE-01-mwlrphns",
+    "startedAt": "2026-11-18T06:56:13.480Z"
+  },
+  {
+    "taskId": "T-MULTI-01",
+    "title": "Change the design-system repo and use it in the app (4 repos)",
+    "category": "multi-repo",
+    "pass": false,
+    "checks": [
+      {
+        "id": "renders /",
+        "pass": true
+      },
+      {
+        "id": "renders /admin/",
+        "pass": true
+      },
+      {
+        "id": "no unmocked API calls",
+        "pass": true
+      },
+      {
+        "id": "doctor: no errors",
+        "pass": true
+      },
+      {
+        "id": "Pill added to the library repo",
+        "pass": false
+      },
+      {
+        "id": "app imports Pill from @acme/ui (no local copy)",
+        "pass": false,
+        "detail": "imports=false localCopy=false"
+      },
+      {
+        "id": "categories rendered on the dashboard",
+        "pass": false,
+        "detail": "Larkspur Coffee Active\nCora Customer · owner\nPayments\nBean Brokers: $820\nMill & Co: $145"
+      },
+      {
+        "id": "API repo untouched",
+        "pass": true,
+        "detail": ""
+      },
+      {
+        "id": "changed repos share one branch",
+        "pass": false,
+        "detail": ""
+      }
+    ],
+    "agent": {
+      "ok": true,
+      "turns": 0,
+      "costUsd": 0,
+      "durationMs": 0,
+      "toolCalls": 0,
+      "toolsUsed": {},
+      "skillsUsed": [],
+      "screenshots": 0,
+      "permissionDenials": [],
+      "mcpConnected": false,
+      "finalMessage": "(dry run: no agent)",
+      "timedOut": false
+    },
+    "changedFiles": {
+      "acme-web": [],
+      "acme-ui": [],
+      "acme-admin": [],
+      "acme-api": []
+    },
+    "doctorWarnings": [],
+    "screenshots": [
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-MULTI-01/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-MULTI-01/_admin_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-55/T-MULTI-01/_.png"
+    ],
+    "workdir": "/home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrpr7y",
+    "startedAt": "2026-11-18T06:56:25.870Z"
+  }
+]

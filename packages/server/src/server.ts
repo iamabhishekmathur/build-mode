@@ -176,7 +176,7 @@ export class StagecraftServer {
       res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' });
       return res.end(this.runtimeJs);
     }
-    if (path === '/__stagecraft/health') return sendJson(res, 200, { ok: true, devUrl: this.devUrl.href });
+    if (path === '/__stagecraft/health') return sendJson(res, 200, { ok: true, devUrl: this.devUrl.href, apiOrigins: this.engine.config.apiOrigins });
     if (path === '/__stagecraft/compare') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(comparePage(url));

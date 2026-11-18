@@ -45,9 +45,9 @@ This product spans several repos. Paths are relative to this repo. Stagecraft co
 |---|---|---|---|
 ${rows}
 
-- Before you change any repo, run \`npx stagecraft workspace branch <name>\` once, so every writable repo is on the same prototype branch.
+- Before you change any repo, run \`npx --no stagecraft workspace branch <name>\` once, so every writable repo is on the same prototype branch.
 - Put a change in the repo that owns it: shared components in the library repo, screens in the app repo. Do not copy library code into an app.
-- \`npx stagecraft workspace status\` lists the repos you changed. A handoff is one PR per changed repo; link the PRs to each other.
+- \`npx --no stagecraft workspace status\` lists the repos you changed. A handoff is one PR per changed repo; link the PRs to each other.
 `;
 }
 
@@ -61,7 +61,8 @@ function claudeSettings(root: string, repos: ResolvedRepo[]): string {
   }
   const uniq = (xs: string[]) => [...new Set(xs)];
   const perms = cur.permissions ?? {};
-  perms.allow = uniq([...(perms.allow ?? []), 'mcp__stagecraft', 'Bash(npx stagecraft:*)', 'Bash(npx tsc:*)']);
+  // Drop the old rule that allowed plain `npx stagecraft` (it can download an unrelated package).
+  perms.allow = uniq([...(perms.allow ?? []).filter((x: string) => x !== 'Bash(npx stagecraft:*)'), 'mcp__stagecraft', 'Bash(npx --no stagecraft:*)', 'Bash(npx tsc:*)']);
   const dirs = repos.filter((r) => !r.host).map((r) => r.path);
   if (dirs.length) perms.additionalDirectories = uniq([...(perms.additionalDirectories ?? []), ...dirs]);
   cur.permissions = perms;
@@ -118,7 +119,9 @@ export function drift(root: string, repos: ResolvedRepo[] = []): string[] {
 /** MCP config for each agent. */
 export function writeMcpConfigs(root: string): string[] {
   const written: string[] = [];
-  const server = { command: 'npx', args: ['stagecraft', 'mcp'] };
+  // --no: never download. The npm name "stagecraft" belongs to an unrelated package; without --no,
+  // npx would fetch and run it when this repo has no local install.
+  const server = { command: 'npx', args: ['--no', 'stagecraft', 'mcp'] };
   for (const rel of ['.mcp.json', '.cursor/mcp.json']) {
     const file = join(root, rel);
     let cfg: any = {};
@@ -133,7 +136,7 @@ export function writeMcpConfigs(root: string): string[] {
     written.push(rel);
   }
   const codex = join(root, '.codex/config.toml');
-  const block = `[mcp_servers.stagecraft]\ncommand = "npx"\nargs = ["stagecraft", "mcp"]\n`;
+  const block = `[mcp_servers.stagecraft]\ncommand = "npx"\nargs = ["--no", "stagecraft", "mcp"]\n`;
   const cur = read(codex) ?? '';
   if (!cur.includes('[mcp_servers.stagecraft]')) {
     mkdirSync(dirname(codex), { recursive: true });

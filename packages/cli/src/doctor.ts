@@ -41,7 +41,7 @@ export async function doctor(cwd: string): Promise<DoctorReport> {
   const r: DoctorReport = { errors: [], warnings: [], ok: [] };
   const file = findConfig(cwd);
   if (!file) {
-    r.errors.push('No stagecraft.config.ts. Run "npx stagecraft init".');
+    r.errors.push('No stagecraft.config.ts. Run "npx --no stagecraft init".');
     return r;
   }
   const warnings: string[] = [];
@@ -108,8 +108,8 @@ export async function doctor(cwd: string): Promise<DoctorReport> {
   if (repos.length > 1) {
     const st = workspaceStatus(repos);
     for (const x of st) {
-      if (!x.present) (x.role === 'library' || x.role === 'app' ? r.errors : r.warnings).push(`Workspace repo "${x.name}" is missing at ${x.path}. Run "npx stagecraft workspace clone".`);
-      for (const l of x.links) if (!l.linked) r.warnings.push(`${l.package} is not linked into ${l.consumer}: edits in the library repo will not show. Run "npx stagecraft workspace link" (or "stagecraft dev" links it).`);
+      if (!x.present) (x.role === 'library' || x.role === 'app' ? r.errors : r.warnings).push(`Workspace repo "${x.name}" is missing at ${x.path}. Run "npx --no stagecraft workspace clone".`);
+      for (const l of x.links) if (!l.linked) r.warnings.push(`${l.package} is not linked into ${l.consumer}: edits in the library repo will not show. Run "npx --no stagecraft workspace link" (or "stagecraft dev" links it).`);
     }
     // npm-link style links load the library's own React if it has one: two Reacts break hooks.
     for (const lib of repos.filter((x) => x.role === 'library' && existsSync(x.abs))) {
@@ -119,7 +119,7 @@ export async function doctor(cwd: string): Promise<DoctorReport> {
       }
     }
     const branches = new Set(st.filter((x) => !x.readOnly && x.changedFiles.length && x.branch).map((x) => x.branch));
-    if (branches.size > 1) r.warnings.push(`Changed repos are on different branches (${[...branches].join(', ')}). Run "npx stagecraft workspace branch <name>".`);
+    if (branches.size > 1) r.warnings.push(`Changed repos are on different branches (${[...branches].join(', ')}). Run "npx --no stagecraft workspace branch <name>".`);
     for (const x of st) if (x.readOnly && x.changedFiles.length) r.warnings.push(`Read-only repo "${x.name}" has changes: ${x.changedFiles.slice(0, 5).join(', ')}`);
     if (!r.errors.length) r.ok.push(`Workspace: ${repos.length - 1} repos (${repos.filter((x) => !x.host).map((x) => `${x.name}:${x.role}`).join(', ')}).`);
     // Mocks vs the API contract.
@@ -141,7 +141,7 @@ export async function doctor(cwd: string): Promise<DoctorReport> {
   }
 
   const d = drift(root, repos);
-  if (d.length) r.warnings.push(`Agent files are out of date with stagecraft/agents.md: ${d.join(', ')}. Run "npx stagecraft agents sync".`);
+  if (d.length) r.warnings.push(`Agent files are out of date with stagecraft/agents.md: ${d.join(', ')}. Run "npx --no stagecraft agents sync".`);
   else r.ok.push('Agent instructions and skills are in sync.');
 
   if (!existsSync(join(root, '.env.stagecraft'))) r.warnings.push('No .env.stagecraft. The dev server may read real env values.');

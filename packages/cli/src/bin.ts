@@ -71,7 +71,7 @@ async function main() {
       if (sub === 'check') {
         const d = drift(root, repos);
         if (d.length) {
-          console.log(`Out of sync: ${d.join(', ')}\nRun "npx stagecraft agents sync".`);
+          console.log(`Out of sync: ${d.join(', ')}\nRun "npx --no stagecraft agents sync".`);
           return 1;
         }
         console.log('Agent files are in sync.');

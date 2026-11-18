@@ -54,7 +54,7 @@ describe('init and agent files (FR-106, FR-303, FR-304)', () => {
     expect(agents).toMatch(/^# Team rules\n\nUse tabs\./);
     expect(agents).toContain('Stagecraft prototyping rules');
     expect(readFileSync(join(root, 'CLAUDE.md'), 'utf8')).toContain('@AGENTS.md');
-    expect(JSON.parse(readFileSync(join(root, '.mcp.json'), 'utf8')).mcpServers.stagecraft.args).toEqual(['stagecraft', 'mcp']);
+    expect(JSON.parse(readFileSync(join(root, '.mcp.json'), 'utf8')).mcpServers.stagecraft.args).toEqual(['--no', 'stagecraft', 'mcp']);
     expect(readFileSync(join(root, '.codex/config.toml'), 'utf8')).toContain('[mcp_servers.stagecraft]');
     const skill = readFileSync(join(root, '.claude/skills/stagecraft-make-tape/SKILL.md'), 'utf8');
     expect(skill).toMatch(/^---\nname: make-tape\ndescription: /);

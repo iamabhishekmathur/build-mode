@@ -2,8 +2,8 @@
   "permissions": {
     "allow": [
       "mcp__stagecraft",
-      "Bash(npx stagecraft:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npx --no stagecraft:*)"
     ]
   },
   "enabledMcpjsonServers": [

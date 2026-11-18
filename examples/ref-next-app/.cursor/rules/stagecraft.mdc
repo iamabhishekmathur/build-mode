@@ -8,7 +8,7 @@ alwaysApply: true
 This repo is set up for prototyping with Stagecraft. The app runs on **mock data** through the Stagecraft proxy. Designers and PMs prototype here. Your changes must be real, shippable code.
 
 ## Run it
-- Start: `npx stagecraft dev` (starts the dev server and the proxy). Open the proxy URL, not the dev server URL.
+- Start: `npx --no stagecraft dev` (starts the dev server and the proxy). Open the proxy URL, not the dev server URL.
 - The `stagecraft` MCP server gives you tools: `state_catalog`, `state_set`, `persona_set`, `flags_set`, `variant_select`, `scenario_save`, `scenario_load`, `mockdb_query`, `mockdb_seed`, `mock_endpoints`, `fault_set`, `tape_create`, `tape_play`, `preview_screenshot`.
 - If a tool says the proxy is not running, start it. Do not ask the user to run commands.
 

@@ -1,0 +1,72 @@
+{
+  "taskId": "T-STATE-01",
+  "title": "Add a \"Payment hold\" state (prepared repo)",
+  "category": "state",
+  "pass": false,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /payments",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "scenario file saved",
+      "pass": false
+    },
+    {
+      "id": "notice shown in scenario",
+      "pass": false,
+      "detail": "document HTTP 404"
+    },
+    {
+      "id": "approve disabled or hidden in scenario",
+      "pass": false,
+      "detail": "document HTTP 404"
+    },
+    {
+      "id": "mock blocks approve during hold",
+      "pass": false
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 0,
+    "costUsd": 0,
+    "durationMs": 0,
+    "toolCalls": 0,
+    "toolsUsed": {},
+    "skillsUsed": [],
+    "screenshots": 0,
+    "permissionDenials": [],
+    "mcpConnected": false,
+    "finalMessage": "(dry run: no agent)",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": []
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-06-55/T-STATE-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-55/T-STATE-01/_payments.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-55/T-STATE-01/_payments-payment-hold-admin.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-55/T-STATE-01/_payments-payment-hold-admin.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-STATE-01-mwlrphns",
+  "startedAt": "2026-11-18T06:56:13.480Z"
+}

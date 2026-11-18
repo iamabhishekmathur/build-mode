@@ -1,0 +1,119 @@
+{
+  "taskId": "T-SET-02",
+  "title": "Set up a Next.js App Router app from scratch (Acme Billing)",
+  "category": "setup",
+  "pass": false,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": false,
+      "detail": "HTTP 500 http://127.0.0.1:4400/?__sc_session=fork&sc_panel=0 | pageerror: fetch failed | document HTTP 500 | framework error overlay shown | "
+    },
+    {
+      "id": "renders /settings",
+      "pass": false,
+      "detail": "HTTP 500 http://127.0.0.1:4400/settings?__sc_session=fork&sc_panel=0 | pageerror: fetch failed | document HTTP 500 | framework error overlay shown | "
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "server-rendered data comes from mocks",
+      "pass": false,
+      "detail": ""
+    },
+    {
+      "id": "viewer persona shows in the UI",
+      "pass": false,
+      "detail": "no persona like /viewer|read.?only/i; have admin, member"
+    },
+    {
+      "id": "past-due state changes the UI",
+      "pass": false,
+      "detail": "no state like /past.?due/i"
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 0,
+    "costUsd": 0,
+    "durationMs": 0,
+    "toolCalls": 0,
+    "toolsUsed": {},
+    "skillsUsed": [],
+    "screenshots": 0,
+    "permissionDenials": [],
+    "mcpConnected": false,
+    "finalMessage": "(dry run: no agent)",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-next-app": [
+      "AGENTS.md",
+      ".agents/skills/stagecraft-add-state/SKILL.md",
+      ".agents/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".agents/skills/stagecraft-build-screen/SKILL.md",
+      ".agents/skills/stagecraft-create-variant/SKILL.md",
+      ".agents/skills/stagecraft-handoff/SKILL.md",
+      ".agents/skills/stagecraft-make-tape/SKILL.md",
+      ".agents/skills/stagecraft-self-check/SKILL.md",
+      ".agents/skills/stagecraft-setup/SKILL.md",
+      ".claude/settings.json",
+      ".claude/skills/stagecraft-add-state/SKILL.md",
+      ".claude/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".claude/skills/stagecraft-build-screen/SKILL.md",
+      ".claude/skills/stagecraft-create-variant/SKILL.md",
+      ".claude/skills/stagecraft-handoff/SKILL.md",
+      ".claude/skills/stagecraft-make-tape/SKILL.md",
+      ".claude/skills/stagecraft-self-check/SKILL.md",
+      ".claude/skills/stagecraft-setup/SKILL.md",
+      ".codex/config.toml",
+      ".cursor/mcp.json",
+      ".cursor/rules/stagecraft.mdc",
+      ".cursor/skills/stagecraft-add-state/SKILL.md",
+      ".cursor/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".cursor/skills/stagecraft-build-screen/SKILL.md",
+      ".cursor/skills/stagecraft-create-variant/SKILL.md",
+      ".cursor/skills/stagecraft-handoff/SKILL.md",
+      ".cursor/skills/stagecraft-make-tape/SKILL.md",
+      ".cursor/skills/stagecraft-self-check/SKILL.md",
+      ".cursor/skills/stagecraft-setup/SKILL.md",
+      ".env.stagecraft",
+      ".mcp.json",
+      "CLAUDE.md",
+      "stagecraft.config.ts",
+      "stagecraft.detect.json",
+      "stagecraft/agents.md",
+      "stagecraft/mocks.ts",
+      "stagecraft/scenarios/.gitkeep",
+      "stagecraft/seed.ts",
+      "stagecraft/skills/add-state/SKILL.md",
+      "stagecraft/skills/apply-figma-frame/SKILL.md",
+      "stagecraft/skills/build-screen/SKILL.md",
+      "stagecraft/skills/create-variant/SKILL.md",
+      "stagecraft/skills/handoff/SKILL.md",
+      "stagecraft/skills/make-tape/SKILL.md",
+      "stagecraft/skills/self-check/SKILL.md",
+      "stagecraft/skills/setup/SKILL.md",
+      "stagecraft/states.ts",
+      "stagecraft/tapes/.gitkeep"
+    ]
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-02/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-02/_settings.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-55/T-SET-02/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-SET-02-mwlrp4m8",
+  "startedAt": "2026-11-18T06:55:56.576Z"
+}

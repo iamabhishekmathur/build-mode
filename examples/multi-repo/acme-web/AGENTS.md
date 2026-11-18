@@ -4,7 +4,7 @@
 This repo is set up for prototyping with Stagecraft. The app runs on **mock data** through the Stagecraft proxy. Designers and PMs prototype here. Your changes must be real, shippable code.
 
 ## Run it
-- Start: `npx stagecraft dev` (starts the dev server and the proxy). Open the proxy URL, not the dev server URL.
+- Start: `npx --no stagecraft dev` (starts the dev server and the proxy). Open the proxy URL, not the dev server URL.
 - The `stagecraft` MCP server gives you tools: `state_catalog`, `state_set`, `persona_set`, `flags_set`, `variant_select`, `scenario_save`, `scenario_load`, `mockdb_query`, `mockdb_seed`, `mock_endpoints`, `fault_set`, `tape_create`, `tape_play`, `preview_screenshot`.
 - If a tool says the proxy is not running, start it. Do not ask the user to run commands.
 
@@ -35,7 +35,7 @@ This product spans several repos. Paths are relative to this repo. Stagecraft co
 | admin | `../acme-admin` | app | Another frontend served at `/admin`. Same mock DB, personas and states as this app. |
 | api | `../acme-api` | api | Read-only. Do not edit. `openapi.json` is the API contract: mocks must match it. |
 
-- Before you change any repo, run `npx stagecraft workspace branch <name>` once, so every writable repo is on the same prototype branch.
+- Before you change any repo, run `npx --no stagecraft workspace branch <name>` once, so every writable repo is on the same prototype branch.
 - Put a change in the repo that owns it: shared components in the library repo, screens in the app repo. Do not copy library code into an app.
-- `npx stagecraft workspace status` lists the repos you changed. A handoff is one PR per changed repo; link the PRs to each other.
+- `npx --no stagecraft workspace status` lists the repos you changed. A handoff is one PR per changed repo; link the PRs to each other.
 <!-- stagecraft:end -->

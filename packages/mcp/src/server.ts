@@ -46,7 +46,7 @@ export async function createMcpServer(opts: McpOptions = {}) {
         body: body === undefined ? undefined : JSON.stringify(body),
       });
     } catch {
-      throw new Error(`Stagecraft proxy is not running at ${baseUrl}. Start it with "npx stagecraft dev" in the repo, then retry.`);
+      throw new Error(`Stagecraft proxy is not running at ${baseUrl}. Start it with "npx --no stagecraft dev" in the repo, then retry.`);
     }
     const data = await res.json().catch(() => null);
     if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`);
@@ -65,7 +65,7 @@ export async function createMcpServer(opts: McpOptions = {}) {
     }) as any);
 
   tool('setup_detect', 'Detect the repo stack (framework, package manager, dev command, router, API style, flags, design system, Storybook).', {}, async () => {
-    if (!root) throw new Error('No stagecraft.config.ts found. Run "npx stagecraft init" first.');
+    if (!root) throw new Error('No stagecraft.config.ts found. Run "npx --no stagecraft init" first.');
     return detect(root);
   });
 

@@ -20,8 +20,19 @@ if (PROXY && !globalThis.__stagecraftPreload) {
   } catch {
     origins = [];
   }
-  const fullOrigins = origins.filter((o) => !o.startsWith('/')).map((o) => new URL(o).origin);
+  const toFull = (list) => list.filter((o) => !o.startsWith('/')).map((o) => new URL(o).origin);
+  let fullOrigins = toFull(origins);
   const proxyOrigin = new URL(PROXY).origin;
+  // apiOrigins can change while the app runs (an agent edits stagecraft.config.ts): keep them fresh.
+  const origFetchForRefresh = globalThis.fetch;
+  const refresh = () =>
+    origFetchForRefresh(`${proxyOrigin}/__stagecraft/health`)
+      .then((r) => r.json())
+      .then((h) => {
+        if (Array.isArray(h.apiOrigins)) fullOrigins = toFull(h.apiOrigins);
+      })
+      .catch(() => {});
+  setInterval(refresh, 2000).unref();
   const als = new AsyncLocalStorage();
   const warned = new Set();
 

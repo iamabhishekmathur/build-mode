@@ -2,7 +2,15 @@
 
 Prototype in the **real product** on **mock data**, in any product state, with the coding agent you already use.
 
-This repo is the first slice of the PRD *"Builder Mode for Everyone"*: the **local core**, plus the **stateful mock DB** and **tapes**. It does not include the desktop app, the cloud runtime, GitHub/Figma integrations, feedback, checks, billing or admin. See [What is not built](#what-is-not-built).
+This repo builds slices of the PRD *"Builder Mode for Everyone"*:
+1. the **local core**, plus the **stateful mock DB** and **tapes**;
+2. **server-side mocking** for SSR / React Server Components, proven on Next.js 16 App Router;
+3. **multi-repo products**: several apps, a design-system repo and an API repo behind one proxy ([docs/multi-repo.md](docs/multi-repo.md));
+4. an **eval harness v0** that runs Claude Code headless on prototyping tasks and checks the result ([evals/](evals/)).
+
+It does not include the desktop app, the cloud runtime, GitHub/Figma integrations, feedback, checks, billing or admin. See [What is not built](#what-is-not-built).
+
+> **Name warning (OQ-1):** the npm name `stagecraft` belongs to an unrelated package. Every generated command uses `npx --no stagecraft`, which fails instead of downloading it. Pick a product name with a free npm name before publishing.
 
 ## Try it (2 minutes)
 
@@ -44,7 +52,10 @@ E2E runs real Vite, the real proxy and headless Chromium against the demo app. C
 | `packages/react` | React adapter: `<StagecraftRoot>`, `<Variant>`, `useVariant`, `useFlag`, `useMockDbVersion`. No-ops in production. |
 | `packages/mcp` | `stagecraft-mcp` (stdio): 24 tools for states, personas, flags, variants, scenarios, mock DB, faults, tapes, preview URL/navigate/screenshot. |
 | `packages/cli` | `stagecraft init / detect / dev / doctor / agents sync / agents check / scenario list / tape validate / mcp`. Templates for agent instructions and 8 skills. |
+| `packages/evals` | Eval harness v0: copies a fixture repo, runs `claude -p` with the repo's generated settings, restarts the app and checks the result. |
 | `examples/ref-react-vite` | Reference app "Ledgerly" (React 19, Vite, React Router) wired for Stagecraft. Generated `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, skills and MCP configs are checked in. |
+| `examples/ref-next-app` | Next.js 16 App Router app; server components fetch a cross-origin API. |
+| `examples/multi-repo` | Four repos of one product: `acme-web` (host), `acme-ui` (design system), `acme-admin` (second app at `/admin`), `acme-api` (OpenAPI contract). |
 
 ### How it works
 
@@ -60,6 +71,8 @@ agent ──MCP──▶ stagecraft-mcp ──HTTP──▶ control API (same se
 ```
 
 The mock DB lives in the proxy (Node), not in the browser. So the app, the panel and the agent all see one state, and share links can fork it.
+
+**Server rendering.** `stagecraft dev` starts the dev server with `node --import @stagecraft/server/preload`. The preload keeps the incoming request's session in `AsyncLocalStorage` and sends server-side `fetch` calls to API origins through the proxy with that session. So server components, SSR loaders and the browser all read one mock DB, per session. Proven on Next.js 16 App Router (RSC, client navigation, forks). Other Node SSR frameworks (Nuxt, SvelteKit, Remix, Angular SSR) use the same mechanism but are not tested yet. Not covered: edge runtimes, and server code that calls APIs with `http.request` (axios on Node) instead of `fetch`.
 
 ### Wiring a repo
 
@@ -94,7 +107,7 @@ If you use React Query, Apollo or SWR, put their provider **inside** `<Stagecraf
 | 404 variants | ✅ | `<Variant>` / `useVariant`; switch with no rebuild or reload. E2E. |
 | 405 side by side | ✅ | `/__stagecraft/compare`: 2–4 forked frames, scroll + nav sync. E2E. |
 | 409 faults | ✅ | Latency, status, no response per endpoint; app refetches. E2E. |
-| 501 intercept | ◐ | Proxy + runtime patching (not a Service Worker; see below). No request reaches a real backend (integration test). **SSR/RSC not handled.** |
+| 501 intercept | ✅ / ◐ | Browser: proxy + runtime patching (not a Service Worker; see below). Server: Node preload for `fetch` (Next.js 16 RSC E2E). Not covered: edge runtime, `http.request` clients. |
 | 503 / 504 / 505 mock DB | ✅ | Stateful per session; `shared` mode; fork-on-open. FR-503 AC passes in E2E. MCP `mockdb_*`. |
 | 507 mock isolation | ✅ | Production `vite build` contains zero mock strings. `bundle.test.ts`. |
 | 601 / 602 / 604 scenarios | ✅ | JSON files with DB snapshot, `extends`, schema. Pixel-diff AC not measured; state + DB reproduce exactly. |
@@ -120,5 +133,5 @@ Desktop app, cloud runtime and sandboxes, GitHub App and draft PRs, Figma and St
 ## Known risks in this slice
 
 - **Not tested with real agents.** MCP is tested with the official SDK client over stdio. Claude Code, Codex and Cursor have not run the skills end to end here: this environment has no agent credentials. Do that next.
-- **SSR frameworks** (Next.js App Router/RSC, Nuxt, SvelteKit) need a server-side interceptor. Only client-rendered React + Vite is proven. The PRD calls these Tier 1. That is the largest gap between this slice and the Tier 1 promise.
+- **SSR beyond Next.js** (Nuxt, SvelteKit, Angular SSR) uses the same preload but is not tested. Next.js `fetch` caching (`force-cache`, `revalidate`) sits above our interceptor: cached server data can survive a state change.
 - **No auth on the control API.** The proxy binds to `127.0.0.1` by default. `--host 0.0.0.0` exposes state control and mock-DB writes to your network.

@@ -1,0 +1,76 @@
+{
+  "taskId": "T-MULTI-01",
+  "title": "Change the design-system repo and use it in the app (4 repos)",
+  "category": "multi-repo",
+  "pass": false,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /admin/",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "Pill added to the library repo",
+      "pass": false
+    },
+    {
+      "id": "app imports Pill from @acme/ui (no local copy)",
+      "pass": false,
+      "detail": "imports=false localCopy=false"
+    },
+    {
+      "id": "categories rendered on the dashboard",
+      "pass": false,
+      "detail": "Larkspur Coffee Active\nCora Customer · owner\nPayments\nBean Brokers: $820\nMill & Co: $145"
+    },
+    {
+      "id": "API repo untouched",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "changed repos share one branch",
+      "pass": false,
+      "detail": ""
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 0,
+    "costUsd": 0,
+    "durationMs": 0,
+    "toolCalls": 0,
+    "toolsUsed": {},
+    "skillsUsed": [],
+    "screenshots": 0,
+    "permissionDenials": [],
+    "mcpConnected": false,
+    "finalMessage": "(dry run: no agent)",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "acme-web": [],
+    "acme-ui": [],
+    "acme-admin": [],
+    "acme-api": []
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-06-55/T-MULTI-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-55/T-MULTI-01/_admin_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-55/T-MULTI-01/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrpr7y",
+  "startedAt": "2026-11-18T06:56:25.870Z"
+}

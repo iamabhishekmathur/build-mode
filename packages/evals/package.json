@@ -1,0 +1,9 @@
+{
+  "name": "@stagecraft/evals",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "Eval harness v0: run a coding agent headless on prototyping tasks and check the result automatically.",
+  "bin": { "stagecraft-eval": "./src/cli.ts" },
+  "dependencies": { "@stagecraft/core": "0.1.0", "@stagecraft/server": "0.1.0", "stagecraft": "0.1.0" }
+}
