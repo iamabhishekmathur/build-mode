@@ -1,0 +1,68 @@
+{
+  "taskId": "T-FB-01",
+  "title": "Handle two pinned comments (feedback loop)",
+  "category": "state",
+  "pass": false,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /payments",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "both comments answered by the agent, none resolved by it",
+      "pass": false,
+      "detail": "c001-fn1f:sent, c002-fn88:sent"
+    },
+    {
+      "id": "button now says \"Approve payment\"",
+      "pass": false,
+      "detail": "Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nAda Okafor · admin\nAssistant\nPayments\nWaiting for approval (2)\nSoylent Catering\n$2,380.00\nApprove\nReject\nUmbrel"
+    },
+    {
+      "id": "heading now says \"Latest payments\"",
+      "pass": false
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 0,
+    "costUsd": 0,
+    "durationMs": 0,
+    "toolCalls": 0,
+    "toolsUsed": {},
+    "skillsUsed": [],
+    "screenshots": 0,
+    "permissionDenials": [],
+    "mcpConnected": false,
+    "finalMessage": "(dry run: no agent)",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": []
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-FB-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-FB-01/_payments.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-FB-01/_payments.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-FB-01/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-FB-01-mwlwflmy",
+  "startedAt": "2026-11-18T09:08:30.154Z"
+}

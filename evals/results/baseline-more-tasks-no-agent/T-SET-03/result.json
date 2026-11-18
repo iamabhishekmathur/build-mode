@@ -1,0 +1,133 @@
+{
+  "taskId": "T-SET-03",
+  "title": "Messy setup: SSO redirect on load + required env var",
+  "category": "setup",
+  "pass": false,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": false,
+      "detail": "HTTP 502 http://127.0.0.1:4400/?__sc_session=fork&sc_panel=0 | document HTTP 502 | "
+    },
+    {
+      "id": "renders /payments",
+      "pass": false,
+      "detail": "HTTP 502 http://127.0.0.1:4400/payments?__sc_session=fork&sc_panel=0 | document HTTP 502 | "
+    },
+    {
+      "id": "renders /onboarding",
+      "pass": false,
+      "detail": "HTTP 502 http://127.0.0.1:4400/onboarding?__sc_session=fork&sc_panel=0 | document HTTP 502 | "
+    },
+    {
+      "id": "renders /settings/agents",
+      "pass": false,
+      "detail": "HTTP 502 http://127.0.0.1:4400/settings/agents?__sc_session=fork&sc_panel=0 | document HTTP 502 | "
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "fake value for the required env var",
+      "pass": false
+    },
+    {
+      "id": "no SSO redirect (session mocked)",
+      "pass": false,
+      "detail": "HTTP 502 http://127.0.0.1:4400/?__sc_session=fork&sc_panel=0 document HTTP 502"
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 0,
+    "costUsd": 0,
+    "durationMs": 0,
+    "toolCalls": 0,
+    "toolsUsed": {},
+    "skillsUsed": [],
+    "screenshots": 0,
+    "permissionDenials": [],
+    "mcpConnected": false,
+    "finalMessage": "(dry run: no agent)",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": [
+      ".agents/skills/stagecraft-add-state/SKILL.md",
+      ".agents/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".agents/skills/stagecraft-build-screen/SKILL.md",
+      ".agents/skills/stagecraft-create-variant/SKILL.md",
+      ".agents/skills/stagecraft-handle-feedback/SKILL.md",
+      ".agents/skills/stagecraft-handoff/SKILL.md",
+      ".agents/skills/stagecraft-make-tape/SKILL.md",
+      ".agents/skills/stagecraft-self-check/SKILL.md",
+      ".agents/skills/stagecraft-setup/SKILL.md",
+      ".claude/settings.json",
+      ".claude/skills/stagecraft-add-state/SKILL.md",
+      ".claude/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".claude/skills/stagecraft-build-screen/SKILL.md",
+      ".claude/skills/stagecraft-create-variant/SKILL.md",
+      ".claude/skills/stagecraft-handle-feedback/SKILL.md",
+      ".claude/skills/stagecraft-handoff/SKILL.md",
+      ".claude/skills/stagecraft-make-tape/SKILL.md",
+      ".claude/skills/stagecraft-self-check/SKILL.md",
+      ".claude/skills/stagecraft-setup/SKILL.md",
+      ".codex/config.toml",
+      ".cursor/mcp.json",
+      ".cursor/rules/stagecraft.mdc",
+      ".cursor/skills/stagecraft-add-state/SKILL.md",
+      ".cursor/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".cursor/skills/stagecraft-build-screen/SKILL.md",
+      ".cursor/skills/stagecraft-create-variant/SKILL.md",
+      ".cursor/skills/stagecraft-handle-feedback/SKILL.md",
+      ".cursor/skills/stagecraft-handoff/SKILL.md",
+      ".cursor/skills/stagecraft-make-tape/SKILL.md",
+      ".cursor/skills/stagecraft-self-check/SKILL.md",
+      ".cursor/skills/stagecraft-setup/SKILL.md",
+      ".env.stagecraft",
+      ".mcp.json",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "stagecraft.config.ts",
+      "stagecraft.detect.json",
+      "stagecraft/.setup-started",
+      "stagecraft/agents.md",
+      "stagecraft/mocks.ts",
+      "stagecraft/scenarios/.gitkeep",
+      "stagecraft/seed.ts",
+      "stagecraft/skills/add-state/SKILL.md",
+      "stagecraft/skills/apply-figma-frame/SKILL.md",
+      "stagecraft/skills/build-screen/SKILL.md",
+      "stagecraft/skills/create-variant/SKILL.md",
+      "stagecraft/skills/handle-feedback/SKILL.md",
+      "stagecraft/skills/handoff/SKILL.md",
+      "stagecraft/skills/make-tape/SKILL.md",
+      "stagecraft/skills/self-check/SKILL.md",
+      "stagecraft/skills/setup/SKILL.md",
+      "stagecraft/states.ts",
+      "stagecraft/tapes/.gitkeep"
+    ]
+  },
+  "doctorWarnings": [
+    "Template placeholders are still in the config: persona \"admin\", persona \"member\", state account.active, state account.frozen. Replace them with the product's real roles and states (seed data and mocks too).",
+    "Endpoints in code with no mock:\n    /api/assistant/stream  (src/Assistant.tsx)\n    /api/payments  (src/Assistant.tsx)\n    /api/payments/:param/:param  (src/Assistant.tsx)\n    /api/session  (src/main.tsx)\n    /api/payments  (src/pages/Dashboard.tsx)\n    /api/onboarding/complete-step  (src/pages/Onboarding.tsx)\n    /api/payments  (src/pages/Payments.tsx)\n    /api/payments/:param/:param  (src/pages/Payments.tsx)"
+  ],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-SET-03/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-SET-03/_payments.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-SET-03/_onboarding.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-SET-03/_settings_agents.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-SET-03/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-SET-03-mwlwjx7y",
+  "startedAt": "2026-11-18T09:11:51.790Z"
+}

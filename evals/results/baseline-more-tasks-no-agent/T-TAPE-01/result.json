@@ -1,0 +1,61 @@
+{
+  "taskId": "T-TAPE-01",
+  "title": "Write a tape: refund with an error, a retry and an approval branch",
+  "category": "state",
+  "pass": false,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "new valid tape with error, approval and two branches",
+      "pass": false,
+      "detail": "tapes: none"
+    },
+    {
+      "id": "both branches play",
+      "pass": false,
+      "detail": "no tape"
+    },
+    {
+      "id": "gave a deep link to the waiting step",
+      "pass": false
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 0,
+    "costUsd": 0,
+    "durationMs": 0,
+    "toolCalls": 0,
+    "toolsUsed": {},
+    "skillsUsed": [],
+    "screenshots": 0,
+    "permissionDenials": [],
+    "mcpConnected": false,
+    "finalMessage": "(dry run: no agent)",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": []
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-TAPE-01/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-TAPE-01-mwlwhmxb",
+  "startedAt": "2026-11-18T09:10:05.135Z"
+}

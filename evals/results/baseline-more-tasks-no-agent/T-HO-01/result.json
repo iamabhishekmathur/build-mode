@@ -1,0 +1,71 @@
+{
+  "taskId": "T-HO-01",
+  "title": "Handoff: keep the winning variant, pass the gate, write the PR description",
+  "category": "state",
+  "pass": false,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /settings/agents",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "no variants left in product code",
+      "pass": false
+    },
+    {
+      "id": "cards layout kept",
+      "pass": false
+    },
+    {
+      "id": "handoff gate passes",
+      "pass": false,
+      "detail": "no variants left: src/pages/AgentControls.tsx:70"
+    },
+    {
+      "id": "PR description written with backend work and states",
+      "pass": false,
+      "detail": "0 chars"
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 0,
+    "costUsd": 0,
+    "durationMs": 0,
+    "toolCalls": 0,
+    "toolsUsed": {},
+    "skillsUsed": [],
+    "screenshots": 0,
+    "permissionDenials": [],
+    "mcpConnected": false,
+    "finalMessage": "(dry run: no agent)",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": []
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-HO-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-HO-01/_settings_agents.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-08/T-HO-01/_settings_agents.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-HO-01-mwlwgpve",
+  "startedAt": "2026-11-18T09:09:22.298Z"
+}

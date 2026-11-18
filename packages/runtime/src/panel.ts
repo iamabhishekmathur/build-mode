@@ -218,7 +218,7 @@ export function mountPanel(rt: StagecraftRuntime, defaults: any) {
       return;
     }
     if (mode === 'collapsed') {
-      root.innerHTML = `<style>${CSS}</style><button class="handle" data-k="expand" aria-label="Open Stagecraft panel">SC</button>`;
+      root.innerHTML = `<style>${CSS}</style><button class="handle" data-k="expand" aria-label="SC: open Stagecraft panel">SC</button>`;
       root.querySelector('[data-k=expand]')!.addEventListener('click', () => setMode('open'));
       if (focusKey) (root.querySelector(`[data-k="${focusKey}"]`) as HTMLElement | null)?.focus();
       return;
