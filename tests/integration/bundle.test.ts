@@ -19,4 +19,17 @@ describe('production build (FR-507, FR-106)', () => {
       expect(code, marker).not.toContain(marker);
     }
   }, 60000);
+
+  it('Vue app (@stagecraft/vue): zero bytes of mock code, adapter is inert', async () => {
+    const { build } = await import('vite');
+    const root = join(REPO, 'examples/ref-vue-vite');
+    const outDir = join(REPO, 'tests/.tmp', `bundle-vue-${Date.now()}`);
+    await build({ root, configFile: join(root, 'vite.config.ts'), logLevel: 'silent', build: { outDir, emptyOutDir: true } });
+    const code = allFiles(outDir).map((f) => readFileSync(f, 'utf8')).join('\n');
+    expect(code.length).toBeGreaterThan(10_000);
+    expect(code).toContain('Fieldnote');
+    for (const marker of ['Harbor Design Co', 'fieldnote.test', 'Only owners can create projects', 'Project 12', 'An admin locked the workspace', '__STAGECRAFT_BOOT__']) {
+      expect(code, marker).not.toContain(marker);
+    }
+  }, 60000);
 });

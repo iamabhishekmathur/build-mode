@@ -133,7 +133,7 @@ export function detect(root: string): Detection {
   if (d.framework?.name === 'angular' && Number((d.framework.version ?? '0').split('.')[0]) < 17) d.framework.tier = 2;
 
   // Bundler
-  d.bundler = has(deps, 'vite') ? 'vite' : has(deps, 'next') ? 'next' : has(deps, 'webpack') ? `webpack ${ver(deps, 'webpack') ?? ''}`.trim() : has(deps, 'react-scripts') ? 'webpack (CRA)' : has(deps, 'parcel') ? 'parcel' : null;
+  d.bundler = has(deps, 'vite') || has(deps, 'nuxt') ? 'vite' : has(deps, 'next') ? 'next' : has(deps, 'webpack') ? `webpack ${ver(deps, 'webpack') ?? ''}`.trim() : has(deps, 'react-scripts') ? 'webpack (CRA)' : has(deps, 'parcel') ? 'parcel' : null;
   if (d.bundler?.startsWith('webpack 4')) notes.push('webpack 4 is Tier 2: injection works through the proxy; HMR may need a manual reload.');
 
   // Dev command and port
@@ -168,7 +168,8 @@ export function detect(root: string): Detection {
   // Router
   d.router =
     ['react-router', 'react-router-dom', '@tanstack/react-router', 'vue-router', 'wouter'].find((r) => has(deps, r)) ??
-    (d.framework?.name === 'next' ? (existsSync(join(root, 'app')) || existsSync(join(root, 'src/app')) ? 'next-app-router' : 'next-pages-router') : null);
+    (d.framework?.name === 'next' ? (existsSync(join(root, 'app')) || existsSync(join(root, 'src/app')) ? 'next-app-router' : 'next-pages-router') : null) ??
+    (d.framework?.name === 'nuxt' ? 'nuxt-pages' : null);
 
   // API style
   if (['@apollo/client', 'urql', 'graphql-request', 'graphql'].some((x) => has(deps, x))) d.apiStyle.push('graphql');

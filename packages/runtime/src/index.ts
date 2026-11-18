@@ -6,6 +6,9 @@ import { mountPanel } from './panel.ts';
   const boot = window.__STAGECRAFT_BOOT__;
   if (!boot || window.__STAGECRAFT__) return;
   let info: SessionInfo = boot.session;
+  // Data version the page has rendered. Separate from info.dataVersion: rt.set() takes the PATCH
+  // response, which can arrive before the 'state' event, and then that event would look like "no data change".
+  let renderedData = info.dataVersion;
   let catalog = boot.catalog;
   const defaults = boot.defaults;
   const sid: string = info.id;
@@ -131,11 +134,16 @@ import { mountPanel } from './panel.ts';
         try {
           const u = new URL(String(url), location.href);
           if (u.origin === location.origin) {
-            const cur = new URL(location.href).searchParams;
-            for (const k of ['__sc_session', '__sc']) {
-              const v = cur.get(k);
-              if (v && !u.searchParams.has(k)) u.searchParams.set(k, v);
-            }
+            // Write this tab's real session and state, not what the router remembers: Nuxt replays the
+            // server-rendered URL on hydration, which can still say __sc_session=fork or sc_scenario=…
+            // (a reload would then fork again, or reload the scenario).
+            for (const p of boot.strip ?? []) u.searchParams.delete(p);
+            u.searchParams.delete('__sc_sid');
+            if (sid !== 'main') u.searchParams.set('__sc_session', sid);
+            else u.searchParams.delete('__sc_session');
+            const sc = encodeShareState(info.state, defaults);
+            if (sc) u.searchParams.set('__sc', sc);
+            else u.searchParams.delete('__sc');
             url = u.pathname + u.search + u.hash;
           }
         } catch {
@@ -177,10 +185,12 @@ import { mountPanel } from './panel.ts';
       const e = JSON.parse(m.data);
       if (e.type === 'hello') {
         info = e.session;
+        renderedData = info.dataVersion;
         return;
       }
       if (e.type === 'state') {
-        const prevData = info.dataVersion;
+        const prevData = renderedData;
+        renderedData = e.dataVersion;
         info = { ...info, state: e.state, flags: e.flags, dataVersion: e.dataVersion, uiVersion: e.uiVersion };
         applyClock();
         syncUrl();

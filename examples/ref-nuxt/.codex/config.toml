@@ -1,0 +1,3 @@
+[mcp_servers.stagecraft]
+command = "npx"
+args = ["--no", "stagecraft", "mcp"]
