@@ -7,6 +7,7 @@ import { drift, sync } from './agents.ts';
 import { doctor } from './doctor.ts';
 import { dev } from './dev.ts';
 import { init } from './init.ts';
+import { mocksCommand } from './generate/index.ts';
 import { loadRepos, workspaceCommand } from './workspace.ts';
 
 const HELP = `stagecraft — prototype in the real product on mock data
@@ -24,6 +25,8 @@ Usage:
   stagecraft workspace status|clone|link|unlink|branch <name>
                                   Multi-repo products: repo status, clone missing repos, dev-link
                                   library packages, one prototype branch across repos
+  stagecraft mocks generate --openapi <spec> | --types <file.ts> --type Name:/path [--out D] [--seed N]
+                                  Generate typed seed data, mock handlers and edge states (stagecraft/generated)
   stagecraft mcp                  Run the MCP server on stdio (used by Claude Code, Codex, Cursor)
 `;
 
@@ -96,6 +99,8 @@ async function main() {
       for (const i of issues) console.log(`${i.path}: ${i.message}`);
       return 1;
     }
+    case 'mocks':
+      return mocksCommand(cwd, sub, rest, log);
     case 'mcp':
       await import('@stagecraft/mcp/bin');
       return null;

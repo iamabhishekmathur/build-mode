@@ -1,0 +1,282 @@
+openapi: 3.0.3
+info:
+  title: Billing API (test fixture)
+  version: '1.0'
+servers:
+  - url: https://api.billing.example/v2
+paths:
+  /account:
+    get:
+      operationId: getAccount
+      responses:
+        '200':
+          description: The account
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+    patch:
+      operationId: updateAccount
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Account' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+  /account/freeze:
+    post:
+      operationId: freezeAccount
+      responses:
+        '200':
+          description: Frozen
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+  /customers:
+    get:
+      operationId: listCustomers
+      responses:
+        '200':
+          description: Customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Customer' }
+  /customers/{customerId}:
+    parameters:
+      - { name: customerId, in: path, required: true, schema: { type: integer } }
+    get:
+      operationId: getCustomer
+      responses:
+        '200':
+          description: Customer
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Customer' }
+  /invoices:
+    get:
+      operationId: listInvoices
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 20 } }
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/InvoiceStatus' } }
+      responses:
+        '200':
+          description: A page of invoices
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvoiceList' }
+    post:
+      operationId: createInvoice
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewInvoice' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Invoice' }
+  /invoices/{invoiceId}:
+    parameters:
+      - $ref: '#/components/parameters/InvoiceId'
+    get:
+      operationId: getInvoice
+      responses:
+        '200':
+          description: The invoice
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Invoice' }
+        '404':
+          description: Not found
+    patch:
+      operationId: updateInvoice
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/NewInvoice' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Invoice' }
+    delete:
+      operationId: deleteInvoice
+      responses:
+        '204':
+          description: Deleted
+  /invoices/{invoiceId}/send:
+    post:
+      operationId: sendInvoice
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+      responses:
+        '200':
+          description: Sent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Invoice' }
+  /invoices/{invoiceId}/lines:
+    get:
+      operationId: listInvoiceLines
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+      responses:
+        '200':
+          description: Lines
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/LineItem' }
+    post:
+      operationId: addInvoiceLine
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LineItem' }
+      responses:
+        '201':
+          description: Added
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LineItem' }
+  /reports/summary:
+    get:
+      operationId: getSummary
+      responses:
+        '200':
+          description: Totals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  outstanding: { type: number }
+                  overdueCount: { type: integer }
+                  currency: { type: string }
+  /webhooks/test:
+    post:
+      operationId: testWebhook
+      responses:
+        '204':
+          description: Sent
+components:
+  parameters:
+    InvoiceId:
+      name: invoiceId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    Account:
+      type: object
+      required: [id, name, status]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        status: { type: string, enum: [active, frozen, closed] }
+        billingEmail: { type: string, format: email }
+        country: { type: string, maxLength: 2 }
+        createdAt: { type: string, format: date-time }
+    Customer:
+      type: object
+      required: [id, name, email]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string, nullable: true }
+        website: { type: string, format: uri }
+        address: { $ref: '#/components/schemas/Address' }
+        tags:
+          type: array
+          items: { type: string }
+    Address:
+      type: object
+      properties:
+        line1: { type: string }
+        city: { type: string }
+        postalCode: { type: string }
+        country: { type: string }
+    InvoiceStatus:
+      type: string
+      enum: [draft, open, sent, paid, void]
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount: { type: number, minimum: 0 }
+        currency: { type: string, enum: [USD, EUR, GBP] }
+    NewInvoice:
+      type: object
+      required: [customerId]
+      properties:
+        customerId: { type: integer }
+        description: { type: string }
+        dueDate: { type: string, format: date }
+        total: { $ref: '#/components/schemas/Money' }
+    Invoice:
+      allOf:
+        - $ref: '#/components/schemas/NewInvoice'
+        - type: object
+          required: [id, number, status, createdAt, lines]
+          properties:
+            id: { type: string, format: uuid }
+            number: { type: string }
+            status: { $ref: '#/components/schemas/InvoiceStatus' }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+            paidAt: { type: string, format: date-time, nullable: true }
+            lines:
+              type: array
+              items: { $ref: '#/components/schemas/LineItem' }
+            payment:
+              oneOf:
+                - $ref: '#/components/schemas/CardPayment'
+                - $ref: '#/components/schemas/BankPayment'
+    LineItem:
+      type: object
+      required: [id, description, quantity, unitPrice]
+      properties:
+        id: { type: string }
+        description: { type: string }
+        quantity: { type: integer, minimum: 1, maximum: 50 }
+        unitPrice: { type: number }
+        kind: { type: string, enum: [service, product, discount] }
+    CardPayment:
+      type: object
+      required: [method, last4]
+      properties:
+        method: { type: string, enum: [card] }
+        last4: { type: string }
+        brand: { type: string, enum: [visa, mastercard, amex] }
+    BankPayment:
+      type: object
+      required: [method, iban]
+      properties:
+        method: { type: string, enum: [bank] }
+        iban: { type: string }
+    InvoiceList:
+      type: object
+      required: [data, total, hasMore]
+      properties:
+        data:
+          type: array
+          items: { $ref: '#/components/schemas/Invoice' }
+        total: { type: integer }
+        hasMore: { type: boolean }
+        page: { type: integer }
