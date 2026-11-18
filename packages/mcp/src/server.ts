@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { validateTape } from '@stagecraft/core';
-import { detect, findConfig, loadConfig, resolveWorkspace, workspaceStatus } from '@stagecraft/server';
+import { detect, findConfig, loadConfig, resolveWorkspace, settle, workspaceStatus } from '@stagecraft/server';
 
 /**
  * Tool names use underscores, not the dots in the PRD (`state.set`).
@@ -176,7 +176,7 @@ export async function createMcpServer(opts: McpOptions = {}) {
 
   tool(
     'preview_screenshot',
-    'Screenshot a route in a forked copy of the session (the user\'s view is not changed). Optionally load a scenario first. Returns a PNG.',
+    'Screenshot a route in a forked copy of the session (the user\'s view is not changed). Optionally load a scenario first, and run actions (click, fill, wait) before the shot, e.g. open a drawer or the assistant chat. Works with error states, hung requests and open streams. Returns a PNG.',
     {
       path: z.string().default('/'),
       scenario: z.string().optional(),
@@ -184,6 +184,17 @@ export async function createMcpServer(opts: McpOptions = {}) {
       height: z.number().default(800),
       fullPage: z.boolean().default(false),
       theme: z.enum(['light', 'dark']).optional(),
+      actions: z
+        .array(
+          z.object({
+            click: z.string().optional().describe('Text of a button or link, or a CSS selector (prefix "css=")'),
+            fill: z.string().optional().describe('Label, placeholder or CSS selector ("css=") of an input'),
+            value: z.string().optional(),
+            wait: z.number().optional().describe('Milliseconds to wait'),
+          }),
+        )
+        .optional()
+        .describe('Steps to run before the screenshot, in order'),
       session,
     },
     async (a) => {
@@ -201,7 +212,23 @@ export async function createMcpServer(opts: McpOptions = {}) {
       const browser = await chromium.launch();
       try {
         const page = await browser.newPage({ viewport: { width: a.width, height: a.height }, colorScheme: a.theme ?? 'light', reducedMotion: 'reduce' });
-        await page.goto(u.href, { waitUntil: 'networkidle' });
+        const errors: string[] = [];
+        page.on('pageerror', (e: Error) => errors.push(e.message));
+        await page.goto(u.href, { waitUntil: 'load' });
+        let pending = await settle(page);
+        const target = (q: string) => (q.startsWith('css=') ? page.locator(q.slice(4)) : page.getByRole('button', { name: q }).or(page.getByRole('link', { name: q })).or(page.getByText(q, { exact: true })).first());
+        const steps: string[] = [];
+        for (const act of a.actions ?? []) {
+          try {
+            if (act.click) await target(act.click).click({ timeout: 5000 });
+            else if (act.fill) await (act.fill.startsWith('css=') ? page.locator(act.fill.slice(4)) : page.getByLabel(act.fill).or(page.getByPlaceholder(act.fill)).first()).fill(act.value ?? '', { timeout: 5000 });
+            if (act.wait) await page.waitForTimeout(act.wait);
+            steps.push(`ok ${JSON.stringify(act)}`);
+          } catch (e) {
+            steps.push(`FAILED ${JSON.stringify(act)}: ${(e as Error).message.split('\n')[0]}`);
+          }
+          pending = await settle(page);
+        }
         await page.waitForTimeout(150);
         const png = await page.screenshot({ fullPage: a.fullPage, animations: 'disabled' });
         let file: string | undefined;
@@ -211,7 +238,8 @@ export async function createMcpServer(opts: McpOptions = {}) {
           file = join(dir, `${Date.now()}-${a.path.replace(/[^a-z0-9]+/gi, '_')}.png`);
           writeFileSync(file, png);
         }
-        return { content: [{ type: 'image', data: png.toString('base64'), mimeType: 'image/png' }, { type: 'text', text: JSON.stringify({ url: u.href, file }) }] };
+        const info = { url: u.href, file, ...(steps.length ? { actions: steps } : {}), ...(errors.length ? { pageErrors: errors } : {}), ...(pending.length ? { stillLoading: pending } : {}) };
+        return { content: [{ type: 'image', data: png.toString('base64'), mimeType: 'image/png' }, { type: 'text', text: JSON.stringify(info) }] };
       } finally {
         await browser.close();
       }

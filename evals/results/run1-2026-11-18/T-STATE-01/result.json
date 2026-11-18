@@ -1,0 +1,97 @@
+{
+  "taskId": "T-STATE-01",
+  "title": "Add a \"Payment hold\" state (prepared repo)",
+  "category": "state",
+  "pass": true,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /payments",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "scenario file saved",
+      "pass": true
+    },
+    {
+      "id": "notice shown in scenario",
+      "pass": true,
+      "detail": "Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nAda Okafor · admin\nAssistant\nPayments\nOutgoing payments are on hold for 48 hours. The hold ends Fri, Nov 20, 5:00 PM. No payments will be sent and appr"
+    },
+    {
+      "id": "approve disabled or hidden in scenario",
+      "pass": true
+    },
+    {
+      "id": "mock blocks approve during hold",
+      "pass": true
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 37,
+    "costUsd": 0.7953336,
+    "durationMs": 92924,
+    "toolCalls": 35,
+    "toolsUsed": {
+      "Skill": 1,
+      "Bash": 9,
+      "Read": 3,
+      "Edit": 6,
+      "Write": 1,
+      "ToolSearch": 1,
+      "mcp__stagecraft__state_catalog": 1,
+      "mcp__stagecraft__persona_set": 2,
+      "mcp__stagecraft__state_set": 3,
+      "mcp__stagecraft__preview_screenshot": 6,
+      "mcp__stagecraft__scenario_save": 1,
+      "mcp__stagecraft__scenario_load": 1
+    },
+    "skillsUsed": [
+      "stagecraft-add-state"
+    ],
+    "screenshots": 6,
+    "permissionDenials": [
+      "Bash: {\"command\":\"python3 - <<'EOF'\\nimport re\\np='src/api.ts'; s=open(p).read()\\ns=s.replace(\\\"status: 'active' | 'frozen' | 'over_limit' | 'under_review'; balance: ",
+      "Bash: {\"command\":\"cat > src/pages/Payments.tsx <<'EOF'\\nimport { useState } from 'react';\\nimport { money, send, useApi, type Account, type Payment, type User } from "
+    ],
+    "mcpConnected": true,
+    "finalMessage": "'Payment hold' is now a state you can pick from the Stagecraft panel (Account → Payment hold). The \"Payment hold admin\" scenario is saved and opens the Payments page. I've loaded that scenario in your preview, so you're looking at it now.\n\n**What admins see on the Payments page during a hold:**\n- An amber notice at the top: \"Outgoing payments are on hold for 48 hours. The hold ends Fri, Nov 20, 5:00 PM. No payments will be sent and approvals are paused until then. You can still reject requests.\"\n- The Approve buttons are greyed out, and hovering one says why.\n- The mock server also refuses approvals during a hold, so this matches how a real backend would behave.\n\n**What I checked in screenshots:**\n- **Admin during a hold:** the notice shows and Approve is disabled. At first the disabled buttons only looked slightly faded and still looked clickable, so I made them clearly grey for every disabled button in the app. The only other one is the brief \"busy\" button on Onboarding.\n- **Admin on a normal account:** no notice, and Approve works as before.\n- **Employee during a hold:** they see the notice and \"On hold\" next to each payment. I took \"You can still reject requests\" out of their version, because only admins can reject.\n\n**Decisions you may want to change:**\n- **Reject still works during a hold.** Rejecting doesn't send money, so I left it on. Tell me if it should be blocked too.\n- **The notice only appears on the Payments page.** Home and the other pages don't mention the hold, unlike the Frozen and Under review states, which show a banner on every page. I can add one if you want the hold to show everywhere.\n- **The hold end time is shown in the viewer's own time zone.** Supporting this meant adding a \"hold ends at\" date to the account data.\n\nThe changes are in `src/pages/Payments.tsx`, `src/api.ts` and `src/styles.css`, plus the mock data, the new state and the scenario in `stagecraft/`. Nothing is committed.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": [
+      "src/api.ts",
+      "src/pages/Payments.tsx",
+      "src/styles.css",
+      "stagecraft/mocks.ts",
+      "stagecraft/seed.ts",
+      "stagecraft/states.ts",
+      "stagecraft/scenarios/payment-hold-admin.json"
+    ]
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-06-56/T-STATE-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-56/T-STATE-01/_payments.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-56/T-STATE-01/_payments-payment-hold-admin.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-56/T-STATE-01/_payments-payment-hold-admin.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-STATE-01-mwlrvhf5",
+  "startedAt": "2026-11-18T07:00:53.105Z"
+}

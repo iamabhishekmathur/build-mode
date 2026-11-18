@@ -1,0 +1,110 @@
+{
+  "taskId": "T-MULTI-01",
+  "title": "Change the design-system repo and use it in the app (4 repos)",
+  "category": "multi-repo",
+  "pass": true,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /admin/",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "Pill added to the library repo",
+      "pass": true
+    },
+    {
+      "id": "app imports Pill from @acme/ui (no local copy)",
+      "pass": true,
+      "detail": "imports=true localCopy=false"
+    },
+    {
+      "id": "categories rendered on the dashboard",
+      "pass": true,
+      "detail": "Larkspur Coffee Active\nCora Customer · owner\nPayments\nBean Brokers: $820Inventory\nMill & Co: $145Equipment\nPaper Cup Depot: $236Supplies\nNorthside Power: $312Utilities\nFixit Espresso Repair: $95"
+    },
+    {
+      "id": "API repo untouched",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "changed repos share one branch",
+      "pass": true,
+      "detail": "acme-web@proto/prototype/payment-category-pill, acme-ui@proto/prototype/payment-category-pill"
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 60,
+    "costUsd": 1.0630863999999998,
+    "durationMs": 272959,
+    "toolCalls": 58,
+    "toolsUsed": {
+      "Skill": 1,
+      "Bash": 8,
+      "Glob": 2,
+      "Read": 11,
+      "ToolSearch": 1,
+      "mcp__stagecraft__state_catalog": 1,
+      "mcp__stagecraft__preview_screenshot": 11,
+      "Edit": 8,
+      "mcp__stagecraft__mockdb_reset": 1,
+      "mcp__stagecraft__fault_set": 8,
+      "mcp__stagecraft__state_set": 1,
+      "Grep": 1,
+      "Write": 1,
+      "mcp__stagecraft__scenario_save": 1,
+      "mcp__stagecraft__mock_endpoints": 1,
+      "mcp__stagecraft__workspace_status": 1
+    },
+    "skillsUsed": [
+      "stagecraft-build-screen"
+    ],
+    "screenshots": 11,
+    "permissionDenials": [
+      "Bash: {\"command\":\"cd .. && ls; for r in acme-web acme-ui acme-admin acme-api; do echo \\\"== $r\\\"; (cd $r && git status -sb | head -3 && git ls-files | grep -v node_mod",
+      "Bash: {\"command\":\"cd /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrxr01 && ls && for r in acme-web acme-ui acme-admin acme-api; do echo \\\"== $r\\\"; git -C $r s",
+      "Bash: {\"command\":\"cd /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrxr01 && ls && git -C acme-web status -sb && git -C acme-web ls-files && echo == && git -C a",
+      "Bash: {\"command\":\"ls -a /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrxr01/; find /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrxr01 -path '*/node_mod",
+      "Bash: {\"command\":\"curl -s -m 10 -i -H 'x-stagecraft-session: err' \\\"http://127.0.0.1:4420/v1/payments?__sc_session=err\\\" | head -20\",\"description\":\"Request the faulte",
+      "Bash: {\"command\":\"node /tmp/claude-0/-home-user-build-mode-tests--tmp-evals-T-MULTI-01-mwlrxr01-acme-web/c712cb05-1893-41ea-9e68-65de15aee720/scratchpad/probe.mjs\",\"t",
+      "Bash: {\"command\":\"npx --no tsc --noEmit -p .\",\"timeout\":120000,\"description\":\"Type-check the app\"}"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "The Pill component is in the design system, and each payment on the dashboard now shows its category in a Pill. It's mostly ready for handoff, but the error state is not verified: the page didn't finish loading when payments fail, so I have no screenshot of it.\n\n**What changed**\n- **Design system (`acme-ui`)**: a new exported `Pill` component, a small rounded label. It's grey by default and has optional `ok`, `warn` and `bad` colours. It uses the existing design tokens and doesn't wrap onto two lines. It sits next to `StatusBadge` in `acme-ui/src/index.tsx`, so any team can import it from `@acme/ui`.\n- **Dashboard (`acme-web`)**: each payment shows its category as a grey Pill. A payment with no category shows no pill. I kept them all grey so categories don't look like good or bad statuses.\n- **Fake data**: five payments for Larkspur Coffee. Four have a category (Inventory, Equipment, Supplies, Utilities) and one has none, to show that case.\n- **States**: the Payments card now has loading, empty (\"No payments yet.\") and error messages. Before this, a failed payments request blanked the whole page. You can switch to the empty state with a new \"No payments\" option in the panel.\n- **Saved scenario**: `payment-categories`, which opens the dashboard with the categories showing.\n\n**What I checked**\n- **Checked in screenshots**: the normal dashboard, the frozen account, a phone-width view, and the empty state all look right.\n- **Error state, not verified**: with payments set to fail, the page never finished loading, so the screenshot timed out each time. Before my change, the same test gave a blank page straight away. The new code may be fetching payments over and over. I tried to look closer with a headless browser and to run the type check, but both commands needed your approval, so neither ran. If you approve them, I'll find and fix the cause.\n- **Loading message**: not captured, because screenshots wait until the page has finished loading.\n\n**For engineering**\n- **Backend dependency**: the real API doesn't return a category yet, and its contract in `acme-api` (which we can't edit) doesn't mention one. The backend needs to add `category`. The dashboard simply hides the pill until then, so it's safe to ship first.\n- **Pull requests**: everything is on the branch `proto/prototype/payment-category-pill`. Handoff will be two linked PRs, one for `acme-ui` and one for `acme-web`; `acme-admin` is unchanged.\n- **Screenshot files**: the preview screenshots were saved in `acme-web/.stagecraft-cache/` and show up as changes. They should be left out of the PR.\n- I haven't committed or opened any PRs. When you're ready, I can run the handoff skill to clean up, run checks and write the PR descriptions.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "acme-web": [
+      "src/main.tsx",
+      "stagecraft/seed.ts",
+      "stagecraft/states.ts",
+      "stagecraft/scenarios/payment-categories.json"
+    ],
+    "acme-ui": [
+      "src/index.tsx"
+    ],
+    "acme-admin": [],
+    "acme-api": []
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-06-56/T-MULTI-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-56/T-MULTI-01/_admin_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-06-56/T-MULTI-01/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrxr01",
+  "startedAt": "2026-11-18T07:02:38.833Z"
+}

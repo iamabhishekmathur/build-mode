@@ -14,7 +14,9 @@ let root: string;
 beforeAll(async () => {
   upstream = http.createServer((_req, res) => {
     res.writeHead(200, { 'content-type': 'text/html' });
-    res.end('<!doctype html><html><head><title>t</title></head><body style="background:#fff"><h1>Hello</h1></body></html>');
+    res.end(`<!doctype html><html><head><title>t</title></head><body style="background:#fff"><h1>Hello</h1>
+<button onclick="document.getElementById('out').textContent='Opened'">Open drawer</button><p id="out"></p>
+<script>fetch('/api/payments').then(r => { document.getElementById('st').textContent = 'status ' + r.status; });</script><p id="st"></p></body></html>`);
   });
   await new Promise<void>((r) => upstream.listen(0, '127.0.0.1', () => r()));
   const fx = fixture('mcp');
@@ -81,6 +83,19 @@ describe('stagecraft-mcp (FR-302, FR-505)', () => {
     const img = r.raw.content.find((c: any) => c.type === 'image');
     expect(img.mimeType).toBe('image/png');
     expect(Buffer.from(img.data, 'base64').subarray(1, 4).toString()).toBe('PNG');
+  }, 30000);
+
+  it('screenshots error states without hanging, and runs actions first', async () => {
+    // The page ignores the 500 body: networkidle would never fire here.
+    await call('fault_set', { faults: [{ endpoint: 'GET /api/payments', status: 500 }] });
+    const t0 = Date.now();
+    const r = await call('preview_screenshot', { path: '/', width: 400, height: 300, actions: [{ click: 'Open drawer' }, { click: 'No such button' }] });
+    expect(Date.now() - t0).toBeLessThan(15000);
+    const info = JSON.parse(r.raw.content.find((c: any) => c.type === 'text').text);
+    expect(info.actions[0]).toMatch(/^ok/);
+    expect(info.actions[1]).toMatch(/^FAILED/);
+    expect(info.stillLoading).toBeUndefined();
+    await call('fault_set', { faults: [] });
   }, 30000);
 
   it('explains when the proxy is down', async () => {

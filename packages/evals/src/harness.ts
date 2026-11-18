@@ -2,7 +2,7 @@ import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { findConfig, loadConfig } from '@stagecraft/server';
+import { findConfig, loadConfig, settle } from '@stagecraft/server';
 import { doctor } from 'stagecraft';
 import type { EvalTask, TaskContext } from './tasks.ts';
 import type { AgentMetrics, CheckResult, TaskResult } from './types.ts';
@@ -210,7 +210,8 @@ export async function runTask(task: EvalTask, outDir: string, log: (m: string) =
         const sc = Buffer.from(JSON.stringify({ ...(opts.persona ? { p: opts.persona } : {}), ...(opts.states ? { s: opts.states } : {}) })).toString('base64url');
         u.searchParams.set('__sc', sc);
       }
-      const resp = await page.goto(u.href, { waitUntil: 'networkidle', timeout: 60_000 }).catch((e) => (errors.push(String(e)), null));
+      const resp = await page.goto(u.href, { waitUntil: 'load', timeout: 60_000 }).catch((e) => (errors.push(String(e)), null));
+      await settle(page, { maxMs: 10_000 });
       if (resp && resp.status() >= 400) errors.push(`document HTTP ${resp.status()}`);
       await page.waitForTimeout(800);
       const overlay = await page.locator('vite-error-overlay, nextjs-portal [data-nextjs-dialog]').count();

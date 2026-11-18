@@ -36,5 +36,5 @@ A tape plays back the product's in-app assistant with no live model. The viewer 
    - `agent_message` supports `tokenDelayMs`, `chunkSize`, and `cutAt` (partial stream).
    - `error` sends an error event. `delay` waits.
 3. `tape_validate`, then `tape_create`.
-4. `tape_play` with the id. Screenshot key steps: `tape_play` with `at` (for example `"6"` or `"approved:1"`) pauses there.
+4. `tape_play` with the id. Screenshot key steps: `tape_play` with `at` (for example `"6"` or `"approved:1"`) pauses there, then `preview_screenshot` with `actions` that open the chat (for example `[{ "click": "Assistant" }, { "wait": 500 }]`).
 5. Give the user a deep link: `/?sc_tape=<id>&sc_step=<at>`.

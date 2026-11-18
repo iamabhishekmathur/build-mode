@@ -1,0 +1,505 @@
+[
+  {
+    "taskId": "T-SET-01",
+    "title": "Set up a React + Vite app from scratch (Ledgerly)",
+    "category": "setup",
+    "pass": true,
+    "checks": [
+      {
+        "id": "renders /",
+        "pass": true
+      },
+      {
+        "id": "renders /payments",
+        "pass": true
+      },
+      {
+        "id": "renders /onboarding",
+        "pass": true
+      },
+      {
+        "id": "renders /settings/agents",
+        "pass": true
+      },
+      {
+        "id": "no unmocked API calls",
+        "pass": true
+      },
+      {
+        "id": "doctor: no errors",
+        "pass": true
+      },
+      {
+        "id": "typecheck",
+        "pass": true
+      },
+      {
+        "id": "employee persona shows in the UI",
+        "pass": true,
+        "detail": "persona employee: Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nEli Employee · employee\nAssistant\nNorthwind Studio\nBalance\n\n$48,210.55\n\nMonthly limit\n\n$16,"
+      },
+      {
+        "id": "frozen state changes the UI",
+        "pass": true,
+        "detail": "account=frozen: Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nAda Admin · admin\nAssistant\nThis account is frozen. Payments and cards are paused while we "
+      },
+      {
+        "id": "cross-origin API mocked (agents page)",
+        "pass": true,
+        "detail": "Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nAda Admin · admin\nAssistant\nAgent controls\n\nDecide what each AI agent can do with your money.\n\nAgent\tCan do\tSpe"
+      }
+    ],
+    "agent": {
+      "ok": true,
+      "turns": 42,
+      "costUsd": 0.9936758000000003,
+      "durationMs": 109374,
+      "toolCalls": 40,
+      "toolsUsed": {
+        "Skill": 1,
+        "Bash": 10,
+        "Glob": 1,
+        "Read": 3,
+        "Write": 5,
+        "ToolSearch": 2,
+        "mcp__stagecraft__mock_endpoints": 1,
+        "mcp__stagecraft__preview_url": 1,
+        "mcp__stagecraft__preview_screenshot": 7,
+        "mcp__stagecraft__persona_set": 2,
+        "mcp__stagecraft__state_set": 2,
+        "mcp__stagecraft__scenario_save": 1,
+        "mcp__stagecraft__tape_play": 1,
+        "mcp__stagecraft__tape_validate": 1,
+        "mcp__stagecraft__tape_control": 1,
+        "mcp__stagecraft__mockdb_reset": 1
+      },
+      "skillsUsed": [
+        "stagecraft-setup"
+      ],
+      "screenshots": 7,
+      "permissionDenials": [
+        "Bash: {\"command\":\"for f in package.json vite.config.ts .env.stagecraft .gitignore src/*.ts* src/pages/* stagecraft/seed.ts stagecraft/mocks.ts stagecraft/states.ts st",
+        "Bash: {\"command\":\"node -e \\\"console.log(require.resolve('@stagecraft/core'))\\\" 2>&1; ls ../../../../packages 2>/dev/null\",\"description\":\"Locate stagecraft core packag",
+        "Bash: {\"command\":\"curl -sN --max-time 4 \\\"http://127.0.0.1:4400/api/assistant/stream?__sc_session=main\\\" | head -c 3000; echo; echo ---; curl -s -X POST \\\"http://127.",
+        "Bash: {\"command\":\"curl -sN --max-time 4 \\\"http://127.0.0.1:4400/api/assistant/stream?__sc_session=tapecheck\\\"\",\"description\":\"Read assistant chat stream through the p"
+      ],
+      "mcpConnected": true,
+      "finalMessage": "The app is running on fake data at **http://127.0.0.1:4400**. Home, Payments, Onboarding and Agent controls all show realistic data, and the admin/employee and active/frozen switches work. The one thing I couldn't look at myself is the open assistant chat panel (details below).\n\n**How to switch views:** use the Stagecraft panel in the app.\n- **Who's signed in:** Admin (Ada) or Employee (Eli). Employees see \"Waiting for an admin\" instead of Approve/Reject.\n- **Account:** Active or Frozen. Frozen shows a red banner on every screen. I also added \"Over spend limit\" and \"Under review\", because the app already has banners for those.\n- **Extra views for prototyping:** no payments yet, nothing to approve, no agents connected, and onboarding just started, halfway or complete.\n- **Saved shortcut:** \"employee-frozen\" opens the Payments screen as Eli with the account frozen.\n\n**What I checked in screenshots:**\n- Home, Payments, Onboarding and Agent controls as admin on an active account: all show real data, with no errors or blank screens.\n- Payments as employee on a frozen account: the banner shows, and the Approve buttons are replaced by \"Waiting for an admin\".\n- Onboarding at phone width: the layout holds up.\n\n**Assistant chat:** I wrote a scripted conversation. Someone asks to pay Acme Supplies $4,200, the assistant checks the spend limit and drafts the payment, and an Approve/Reject card appears. When you click Approve or Reject, the assistant replies to match. Stagecraft's checker passed the script. While it played, the new Acme payment appeared in the real Payments list, so it is connected to the app's data.\n- **Not seen yet:** the chat panel only opens when someone clicks the Assistant button, and my screenshot tool can't click. I also needed your approval to read the chat feed directly, so I haven't seen the messages on screen.\n- **To see it:** open the app, pick \"Pay a vendor, needs admin approval\" in the panel, then click Assistant. I can give you a direct link to a specific step if that's easier.\n\n**Gaps in the app itself (not the fake data):**\n- **Agent controls:** employees still see the Pause and Resume buttons. The fake server refuses the change, but the screen shows no message, so clicking just does nothing.\n- **Frozen account:** admins still see Approve buttons. Clicking one shows \"This account is frozen. Payments are paused.\" rather than the button being hidden.\n\nI can change either of these if you'd like.\n\nBehind the scenes, all the fake data lives in the Stagecraft mock files (none of it is in the product code), and nothing reaches a real server. Nothing is committed yet.",
+      "timedOut": false
+    },
+    "changedFiles": {
+      "ref-react-vite": [
+        ".agents/skills/stagecraft-add-state/SKILL.md",
+        ".agents/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".agents/skills/stagecraft-build-screen/SKILL.md",
+        ".agents/skills/stagecraft-create-variant/SKILL.md",
+        ".agents/skills/stagecraft-handoff/SKILL.md",
+        ".agents/skills/stagecraft-make-tape/SKILL.md",
+        ".agents/skills/stagecraft-self-check/SKILL.md",
+        ".agents/skills/stagecraft-setup/SKILL.md",
+        ".claude/settings.json",
+        ".claude/skills/stagecraft-add-state/SKILL.md",
+        ".claude/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".claude/skills/stagecraft-build-screen/SKILL.md",
+        ".claude/skills/stagecraft-create-variant/SKILL.md",
+        ".claude/skills/stagecraft-handoff/SKILL.md",
+        ".claude/skills/stagecraft-make-tape/SKILL.md",
+        ".claude/skills/stagecraft-self-check/SKILL.md",
+        ".claude/skills/stagecraft-setup/SKILL.md",
+        ".codex/config.toml",
+        ".cursor/mcp.json",
+        ".cursor/rules/stagecraft.mdc",
+        ".cursor/skills/stagecraft-add-state/SKILL.md",
+        ".cursor/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".cursor/skills/stagecraft-build-screen/SKILL.md",
+        ".cursor/skills/stagecraft-create-variant/SKILL.md",
+        ".cursor/skills/stagecraft-handoff/SKILL.md",
+        ".cursor/skills/stagecraft-make-tape/SKILL.md",
+        ".cursor/skills/stagecraft-self-check/SKILL.md",
+        ".cursor/skills/stagecraft-setup/SKILL.md",
+        ".env.stagecraft",
+        ".mcp.json",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "stagecraft.config.ts",
+        "stagecraft.detect.json",
+        "stagecraft/agents.md",
+        "stagecraft/mocks.ts",
+        "stagecraft/scenarios/.gitkeep",
+        "stagecraft/scenarios/employee-frozen.json",
+        "stagecraft/seed.ts",
+        "stagecraft/skills/add-state/SKILL.md",
+        "stagecraft/skills/apply-figma-frame/SKILL.md",
+        "stagecraft/skills/build-screen/SKILL.md",
+        "stagecraft/skills/create-variant/SKILL.md",
+        "stagecraft/skills/handoff/SKILL.md",
+        "stagecraft/skills/make-tape/SKILL.md",
+        "stagecraft/skills/self-check/SKILL.md",
+        "stagecraft/skills/setup/SKILL.md",
+        "stagecraft/states.ts",
+        "stagecraft/tapes/.gitkeep",
+        "stagecraft/tapes/vendor-payment-approval.json"
+      ]
+    },
+    "doctorWarnings": [],
+    "screenshots": [
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-01/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-01/_payments.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-01/_onboarding.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-01/_settings_agents.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-01/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-01/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-01/_settings_agents.png"
+    ],
+    "workdir": "/home/user/build-mode/tests/.tmp/evals/T-SET-01-mwlrqeqq",
+    "startedAt": "2026-11-18T06:56:56.354Z"
+  },
+  {
+    "taskId": "T-SET-02",
+    "title": "Set up a Next.js App Router app from scratch (Acme Billing)",
+    "category": "setup",
+    "pass": true,
+    "checks": [
+      {
+        "id": "renders /",
+        "pass": true
+      },
+      {
+        "id": "renders /settings",
+        "pass": true
+      },
+      {
+        "id": "no unmocked API calls",
+        "pass": true
+      },
+      {
+        "id": "doctor: no errors",
+        "pass": true
+      },
+      {
+        "id": "typecheck",
+        "pass": true
+      },
+      {
+        "id": "server-rendered data comes from mocks",
+        "pass": true,
+        "detail": "Acme Billing\nInvoices\nSettings\nPriya Natarajan · owner\nNorthwind Studio\n\nGrowth plan · 12 seats\n\nInvoices\nBluebird Coffee Roasters\t2026-12-01\topen\t$4,250.00\tMar"
+      },
+      {
+        "id": "viewer persona shows in the UI",
+        "pass": true,
+        "detail": "persona viewer: Acme Billing\nInvoices\nSettings\nTom Okafor · viewer\nSettings\n\nOnly the account owner can change billing."
+      },
+      {
+        "id": "past-due state changes the UI",
+        "pass": true,
+        "detail": "account=past_due: Acme Billing\nInvoices\nSettings\nPriya Natarajan · owner\nNorthwind Studio\n\nGrowth plan · 12 seats\n\nYour payment method failed. Update it to ke"
+      }
+    ],
+    "agent": {
+      "ok": true,
+      "turns": 41,
+      "costUsd": 0.8811504000000001,
+      "durationMs": 90458,
+      "toolCalls": 39,
+      "toolsUsed": {
+        "Skill": 1,
+        "Bash": 11,
+        "Glob": 1,
+        "Read": 7,
+        "Grep": 2,
+        "Write": 5,
+        "Edit": 1,
+        "ToolSearch": 1,
+        "mcp__stagecraft__mock_endpoints": 2,
+        "mcp__stagecraft__preview_screenshot": 6,
+        "mcp__stagecraft__state_set": 2
+      },
+      "skillsUsed": [
+        "stagecraft-setup"
+      ],
+      "screenshots": 6,
+      "permissionDenials": [
+        "Bash: {\"command\":\"for f in stagecraft/seed.ts stagecraft/mocks.ts stagecraft/states.ts .env.stagecraft package.json next.config.mjs app/*.tsx app/settings/* lib/* app",
+        "Bash: {\"command\":\"cd /home/user/build-mode && ls; ls packages 2>/dev/null; ls packages/*/ 2>/dev/null; ls packages/*/docs 2>/dev/null; find packages -maxdepth 2 -name",
+        "Bash: {\"command\":\"cd /home/user/build-mode/packages && cat server/src/dev-env.ts core/src/types.ts core/src/define.ts\",\"description\":\"Read Stagecraft dev-env and core",
+        "Bash: {\"command\":\"cat > stagecraft/scenarios/past-due-owner.json <<'EOF'\\n{\\n  \\\"name\\\": \\\"past-due-owner\\\",\\n  \\\"description\\\": \\\"Account owner on a past-due account",
+        "Bash: {\"command\":\"curl -sS http://127.0.0.1:4400/__stagecraft/health; echo; curl -sS -o /dev/null -w '%{http_code}\\\\n' http://127.0.0.1:3100/\",\"description\":\"Check ex"
+      ],
+      "mcpConnected": true,
+      "finalMessage": "The billing app now runs entirely on fake data. Both the Invoices and Settings pages load, you can switch between an account owner and a read-only viewer, and you can show a past-due account. I checked each of these with screenshots. I did not try clicking \"Mark paid\", so that button hasn't been checked yet.\n\n**What was wrong:** the starter setup was faking the wrong addresses. The app gets its data from `api.acme-billing.example`, but the fake data was answering somewhere else. Its user roles were also \"admin/member\" instead of the app's \"owner/viewer\". The built-in health check reported everything as fine anyway. Left as it was, the pages would have tried to reach the real billing service and failed. The fake data now answers every request the app makes. The real service is never contacted, and none of the app's own code was changed.\n\n**What you can switch between in the Stagecraft panel:**\n- **Personas:**\n  - **Account owner** (Priya Natarajan) sees \"Mark paid\" buttons, and Settings says she can change billing.\n  - **Read-only viewer** (Tom Okafor) sees no action buttons, and Settings says only the owner can change billing.\n- **Account status:**\n  - **Active.**\n  - **Past due** shows the yellow \"Your payment method failed\" banner.\n  - **Suspended** shows the red banner and hides all \"Mark paid\" buttons.\n- **Invoices:**\n  - **Mixed** (the default) is a fictional company, Northwind Studio, with 7 invoices that are open, overdue or paid.\n  - **Empty** is a new account with no invoices.\n  - **Several overdue** marks three invoices as overdue.\n- **Saved one-click setups:** `past-due-owner` and `past-due-viewer`.\n\nAs a viewer, \"Mark paid\" is refused if the request gets past the hidden button. It's also refused on a suspended account. Marking an invoice paid only changes your own session's fake data.\n\n**What I checked:**\n- Screenshots of Invoices and Settings, as owner and as viewer.\n- Both saved past-due setups.\n- The suspended account combined with no invoices.\n- The health check passes, and no request from the app is left without fake data.\n\nI put the shared view back to owner, active account, mixed invoices when I was done.\n\n**To try it:** open http://127.0.0.1:4400 (the Stagecraft address, not port 3100) and use the panel to switch persona and states.\n\nThe setup lives in `stagecraft.config.ts` and these files in the `stagecraft/` folder: `seed.ts`, `mocks.ts`, `states.ts` and the two new files in `scenarios/`. Nothing is committed yet.",
+      "timedOut": false
+    },
+    "changedFiles": {
+      "ref-next-app": [
+        "AGENTS.md",
+        ".agents/skills/stagecraft-add-state/SKILL.md",
+        ".agents/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".agents/skills/stagecraft-build-screen/SKILL.md",
+        ".agents/skills/stagecraft-create-variant/SKILL.md",
+        ".agents/skills/stagecraft-handoff/SKILL.md",
+        ".agents/skills/stagecraft-make-tape/SKILL.md",
+        ".agents/skills/stagecraft-self-check/SKILL.md",
+        ".agents/skills/stagecraft-setup/SKILL.md",
+        ".claude/settings.json",
+        ".claude/skills/stagecraft-add-state/SKILL.md",
+        ".claude/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".claude/skills/stagecraft-build-screen/SKILL.md",
+        ".claude/skills/stagecraft-create-variant/SKILL.md",
+        ".claude/skills/stagecraft-handoff/SKILL.md",
+        ".claude/skills/stagecraft-make-tape/SKILL.md",
+        ".claude/skills/stagecraft-self-check/SKILL.md",
+        ".claude/skills/stagecraft-setup/SKILL.md",
+        ".codex/config.toml",
+        ".cursor/mcp.json",
+        ".cursor/rules/stagecraft.mdc",
+        ".cursor/skills/stagecraft-add-state/SKILL.md",
+        ".cursor/skills/stagecraft-apply-figma-frame/SKILL.md",
+        ".cursor/skills/stagecraft-build-screen/SKILL.md",
+        ".cursor/skills/stagecraft-create-variant/SKILL.md",
+        ".cursor/skills/stagecraft-handoff/SKILL.md",
+        ".cursor/skills/stagecraft-make-tape/SKILL.md",
+        ".cursor/skills/stagecraft-self-check/SKILL.md",
+        ".cursor/skills/stagecraft-setup/SKILL.md",
+        ".env.stagecraft",
+        ".mcp.json",
+        "CLAUDE.md",
+        "stagecraft.config.ts",
+        "stagecraft.detect.json",
+        "stagecraft/agents.md",
+        "stagecraft/mocks.ts",
+        "stagecraft/scenarios/.gitkeep",
+        "stagecraft/scenarios/past-due-owner.json",
+        "stagecraft/scenarios/past-due-viewer.json",
+        "stagecraft/seed.ts",
+        "stagecraft/skills/add-state/SKILL.md",
+        "stagecraft/skills/apply-figma-frame/SKILL.md",
+        "stagecraft/skills/build-screen/SKILL.md",
+        "stagecraft/skills/create-variant/SKILL.md",
+        "stagecraft/skills/handoff/SKILL.md",
+        "stagecraft/skills/make-tape/SKILL.md",
+        "stagecraft/skills/self-check/SKILL.md",
+        "stagecraft/skills/setup/SKILL.md",
+        "stagecraft/states.ts",
+        "stagecraft/tapes/.gitkeep"
+      ]
+    },
+    "doctorWarnings": [],
+    "screenshots": [
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-02/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-02/_settings.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-02/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-02/_settings.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-SET-02/_.png"
+    ],
+    "workdir": "/home/user/build-mode/tests/.tmp/evals/T-SET-02-mwlrt5a3",
+    "startedAt": "2026-11-18T06:59:04.059Z"
+  },
+  {
+    "taskId": "T-STATE-01",
+    "title": "Add a \"Payment hold\" state (prepared repo)",
+    "category": "state",
+    "pass": true,
+    "checks": [
+      {
+        "id": "renders /",
+        "pass": true
+      },
+      {
+        "id": "renders /payments",
+        "pass": true
+      },
+      {
+        "id": "no unmocked API calls",
+        "pass": true
+      },
+      {
+        "id": "doctor: no errors",
+        "pass": true
+      },
+      {
+        "id": "typecheck",
+        "pass": true
+      },
+      {
+        "id": "scenario file saved",
+        "pass": true
+      },
+      {
+        "id": "notice shown in scenario",
+        "pass": true,
+        "detail": "Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nAda Okafor · admin\nAssistant\nPayments\nOutgoing payments are on hold for 48 hours. The hold ends Fri, Nov 20, 5:00 PM. No payments will be sent and appr"
+      },
+      {
+        "id": "approve disabled or hidden in scenario",
+        "pass": true
+      },
+      {
+        "id": "mock blocks approve during hold",
+        "pass": true
+      }
+    ],
+    "agent": {
+      "ok": true,
+      "turns": 37,
+      "costUsd": 0.7953336,
+      "durationMs": 92924,
+      "toolCalls": 35,
+      "toolsUsed": {
+        "Skill": 1,
+        "Bash": 9,
+        "Read": 3,
+        "Edit": 6,
+        "Write": 1,
+        "ToolSearch": 1,
+        "mcp__stagecraft__state_catalog": 1,
+        "mcp__stagecraft__persona_set": 2,
+        "mcp__stagecraft__state_set": 3,
+        "mcp__stagecraft__preview_screenshot": 6,
+        "mcp__stagecraft__scenario_save": 1,
+        "mcp__stagecraft__scenario_load": 1
+      },
+      "skillsUsed": [
+        "stagecraft-add-state"
+      ],
+      "screenshots": 6,
+      "permissionDenials": [
+        "Bash: {\"command\":\"python3 - <<'EOF'\\nimport re\\np='src/api.ts'; s=open(p).read()\\ns=s.replace(\\\"status: 'active' | 'frozen' | 'over_limit' | 'under_review'; balance: ",
+        "Bash: {\"command\":\"cat > src/pages/Payments.tsx <<'EOF'\\nimport { useState } from 'react';\\nimport { money, send, useApi, type Account, type Payment, type User } from "
+      ],
+      "mcpConnected": true,
+      "finalMessage": "'Payment hold' is now a state you can pick from the Stagecraft panel (Account → Payment hold). The \"Payment hold admin\" scenario is saved and opens the Payments page. I've loaded that scenario in your preview, so you're looking at it now.\n\n**What admins see on the Payments page during a hold:**\n- An amber notice at the top: \"Outgoing payments are on hold for 48 hours. The hold ends Fri, Nov 20, 5:00 PM. No payments will be sent and approvals are paused until then. You can still reject requests.\"\n- The Approve buttons are greyed out, and hovering one says why.\n- The mock server also refuses approvals during a hold, so this matches how a real backend would behave.\n\n**What I checked in screenshots:**\n- **Admin during a hold:** the notice shows and Approve is disabled. At first the disabled buttons only looked slightly faded and still looked clickable, so I made them clearly grey for every disabled button in the app. The only other one is the brief \"busy\" button on Onboarding.\n- **Admin on a normal account:** no notice, and Approve works as before.\n- **Employee during a hold:** they see the notice and \"On hold\" next to each payment. I took \"You can still reject requests\" out of their version, because only admins can reject.\n\n**Decisions you may want to change:**\n- **Reject still works during a hold.** Rejecting doesn't send money, so I left it on. Tell me if it should be blocked too.\n- **The notice only appears on the Payments page.** Home and the other pages don't mention the hold, unlike the Frozen and Under review states, which show a banner on every page. I can add one if you want the hold to show everywhere.\n- **The hold end time is shown in the viewer's own time zone.** Supporting this meant adding a \"hold ends at\" date to the account data.\n\nThe changes are in `src/pages/Payments.tsx`, `src/api.ts` and `src/styles.css`, plus the mock data, the new state and the scenario in `stagecraft/`. Nothing is committed.",
+      "timedOut": false
+    },
+    "changedFiles": {
+      "ref-react-vite": [
+        "src/api.ts",
+        "src/pages/Payments.tsx",
+        "src/styles.css",
+        "stagecraft/mocks.ts",
+        "stagecraft/seed.ts",
+        "stagecraft/states.ts",
+        "stagecraft/scenarios/payment-hold-admin.json"
+      ]
+    },
+    "doctorWarnings": [],
+    "screenshots": [
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-STATE-01/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-STATE-01/_payments.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-STATE-01/_payments-payment-hold-admin.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-STATE-01/_payments-payment-hold-admin.png"
+    ],
+    "workdir": "/home/user/build-mode/tests/.tmp/evals/T-STATE-01-mwlrvhf5",
+    "startedAt": "2026-11-18T07:00:53.105Z"
+  },
+  {
+    "taskId": "T-MULTI-01",
+    "title": "Change the design-system repo and use it in the app (4 repos)",
+    "category": "multi-repo",
+    "pass": true,
+    "checks": [
+      {
+        "id": "renders /",
+        "pass": true
+      },
+      {
+        "id": "renders /admin/",
+        "pass": true
+      },
+      {
+        "id": "no unmocked API calls",
+        "pass": true
+      },
+      {
+        "id": "doctor: no errors",
+        "pass": true
+      },
+      {
+        "id": "Pill added to the library repo",
+        "pass": true
+      },
+      {
+        "id": "app imports Pill from @acme/ui (no local copy)",
+        "pass": true,
+        "detail": "imports=true localCopy=false"
+      },
+      {
+        "id": "categories rendered on the dashboard",
+        "pass": true,
+        "detail": "Larkspur Coffee Active\nCora Customer · owner\nPayments\nBean Brokers: $820Inventory\nMill & Co: $145Equipment\nPaper Cup Depot: $236Supplies\nNorthside Power: $312Utilities\nFixit Espresso Repair: $95"
+      },
+      {
+        "id": "API repo untouched",
+        "pass": true,
+        "detail": ""
+      },
+      {
+        "id": "changed repos share one branch",
+        "pass": true,
+        "detail": "acme-web@proto/prototype/payment-category-pill, acme-ui@proto/prototype/payment-category-pill"
+      }
+    ],
+    "agent": {
+      "ok": true,
+      "turns": 60,
+      "costUsd": 1.0630863999999998,
+      "durationMs": 272959,
+      "toolCalls": 58,
+      "toolsUsed": {
+        "Skill": 1,
+        "Bash": 8,
+        "Glob": 2,
+        "Read": 11,
+        "ToolSearch": 1,
+        "mcp__stagecraft__state_catalog": 1,
+        "mcp__stagecraft__preview_screenshot": 11,
+        "Edit": 8,
+        "mcp__stagecraft__mockdb_reset": 1,
+        "mcp__stagecraft__fault_set": 8,
+        "mcp__stagecraft__state_set": 1,
+        "Grep": 1,
+        "Write": 1,
+        "mcp__stagecraft__scenario_save": 1,
+        "mcp__stagecraft__mock_endpoints": 1,
+        "mcp__stagecraft__workspace_status": 1
+      },
+      "skillsUsed": [
+        "stagecraft-build-screen"
+      ],
+      "screenshots": 11,
+      "permissionDenials": [
+        "Bash: {\"command\":\"cd .. && ls; for r in acme-web acme-ui acme-admin acme-api; do echo \\\"== $r\\\"; (cd $r && git status -sb | head -3 && git ls-files | grep -v node_mod",
+        "Bash: {\"command\":\"cd /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrxr01 && ls && for r in acme-web acme-ui acme-admin acme-api; do echo \\\"== $r\\\"; git -C $r s",
+        "Bash: {\"command\":\"cd /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrxr01 && ls && git -C acme-web status -sb && git -C acme-web ls-files && echo == && git -C a",
+        "Bash: {\"command\":\"ls -a /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrxr01/; find /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrxr01 -path '*/node_mod",
+        "Bash: {\"command\":\"curl -s -m 10 -i -H 'x-stagecraft-session: err' \\\"http://127.0.0.1:4420/v1/payments?__sc_session=err\\\" | head -20\",\"description\":\"Request the faulte",
+        "Bash: {\"command\":\"node /tmp/claude-0/-home-user-build-mode-tests--tmp-evals-T-MULTI-01-mwlrxr01-acme-web/c712cb05-1893-41ea-9e68-65de15aee720/scratchpad/probe.mjs\",\"t",
+        "Bash: {\"command\":\"npx --no tsc --noEmit -p .\",\"timeout\":120000,\"description\":\"Type-check the app\"}"
+      ],
+      "mcpConnected": true,
+      "finalMessage": "The Pill component is in the design system, and each payment on the dashboard now shows its category in a Pill. It's mostly ready for handoff, but the error state is not verified: the page didn't finish loading when payments fail, so I have no screenshot of it.\n\n**What changed**\n- **Design system (`acme-ui`)**: a new exported `Pill` component, a small rounded label. It's grey by default and has optional `ok`, `warn` and `bad` colours. It uses the existing design tokens and doesn't wrap onto two lines. It sits next to `StatusBadge` in `acme-ui/src/index.tsx`, so any team can import it from `@acme/ui`.\n- **Dashboard (`acme-web`)**: each payment shows its category as a grey Pill. A payment with no category shows no pill. I kept them all grey so categories don't look like good or bad statuses.\n- **Fake data**: five payments for Larkspur Coffee. Four have a category (Inventory, Equipment, Supplies, Utilities) and one has none, to show that case.\n- **States**: the Payments card now has loading, empty (\"No payments yet.\") and error messages. Before this, a failed payments request blanked the whole page. You can switch to the empty state with a new \"No payments\" option in the panel.\n- **Saved scenario**: `payment-categories`, which opens the dashboard with the categories showing.\n\n**What I checked**\n- **Checked in screenshots**: the normal dashboard, the frozen account, a phone-width view, and the empty state all look right.\n- **Error state, not verified**: with payments set to fail, the page never finished loading, so the screenshot timed out each time. Before my change, the same test gave a blank page straight away. The new code may be fetching payments over and over. I tried to look closer with a headless browser and to run the type check, but both commands needed your approval, so neither ran. If you approve them, I'll find and fix the cause.\n- **Loading message**: not captured, because screenshots wait until the page has finished loading.\n\n**For engineering**\n- **Backend dependency**: the real API doesn't return a category yet, and its contract in `acme-api` (which we can't edit) doesn't mention one. The backend needs to add `category`. The dashboard simply hides the pill until then, so it's safe to ship first.\n- **Pull requests**: everything is on the branch `proto/prototype/payment-category-pill`. Handoff will be two linked PRs, one for `acme-ui` and one for `acme-web`; `acme-admin` is unchanged.\n- **Screenshot files**: the preview screenshots were saved in `acme-web/.stagecraft-cache/` and show up as changes. They should be left out of the PR.\n- I haven't committed or opened any PRs. When you're ready, I can run the handoff skill to clean up, run checks and write the PR descriptions.",
+      "timedOut": false
+    },
+    "changedFiles": {
+      "acme-web": [
+        "src/main.tsx",
+        "stagecraft/seed.ts",
+        "stagecraft/states.ts",
+        "stagecraft/scenarios/payment-categories.json"
+      ],
+      "acme-ui": [
+        "src/index.tsx"
+      ],
+      "acme-admin": [],
+      "acme-api": []
+    },
+    "doctorWarnings": [],
+    "screenshots": [
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-MULTI-01/_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-MULTI-01/_admin_.png",
+      "/home/user/build-mode/evals/results/2026-11-18-06-56/T-MULTI-01/_.png"
+    ],
+    "workdir": "/home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlrxr01",
+    "startedAt": "2026-11-18T07:02:38.833Z"
+  }
+]
