@@ -1,0 +1,7 @@
+{
+  "$schema": "https://stagecraft.dev/schema/scenario.v1.json",
+  "name": "Suspended agent",
+  "persona": "agent",
+  "states": { "account": "suspended", "tickets": "urgent" },
+  "url": "/"
+}
