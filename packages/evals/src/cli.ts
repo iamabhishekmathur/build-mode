@@ -3,7 +3,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO, runTask } from './harness.ts';
 import { report } from './report.ts';
-import { TASKS } from './tasks.ts';
+import { TASKS as BASE } from './tasks.ts';
+import { MORE_TASKS } from './tasks-more.ts';
+
+const TASKS = [...BASE, ...MORE_TASKS];
 import type { TaskResult } from './types.ts';
 
 const ids = process.argv.slice(2).filter((a) => !a.startsWith('-'));
