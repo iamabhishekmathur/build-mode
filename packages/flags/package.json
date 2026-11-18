@@ -1,0 +1,36 @@
+{
+  "name": "@stagecraft/flags",
+  "version": "0.1.0",
+  "type": "module",
+  "sideEffects": false,
+  "description": "Feature-flag vendor adapters for Stagecraft: OpenFeature providers (web + server) and LaunchDarkly / GrowthBook / Unleash endpoint mocks. Safe in production.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./openfeature": "./src/openfeature.ts",
+    "./openfeature-server": "./src/openfeature-server.ts",
+    "./mocks": "./src/mocks.ts"
+  },
+  "peerDependencies": {
+    "@openfeature/core": ">=1.6",
+    "@openfeature/web-sdk": ">=1.4",
+    "@openfeature/server-sdk": ">=1.15"
+  },
+  "peerDependenciesMeta": {
+    "@openfeature/core": { "optional": true },
+    "@openfeature/web-sdk": { "optional": true },
+    "@openfeature/server-sdk": { "optional": true }
+  },
+  "dependencies": {
+    "@stagecraft/core": "0.1.0",
+    "@stagecraft/runtime": "0.1.0"
+  },
+  "devDependencies": {
+    "@openfeature/core": "^1.9.0",
+    "@openfeature/web-sdk": "^1.6.0",
+    "@openfeature/server-sdk": "^1.18.0",
+    "launchdarkly-js-client-sdk": "^3.9.0",
+    "@launchdarkly/js-client-sdk": "^4.14.0",
+    "@growthbook/growthbook": "^1.6.0",
+    "unleash-proxy-client": "^3.7.0"
+  }
+}

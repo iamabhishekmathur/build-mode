@@ -336,7 +336,7 @@ export class StagecraftServer {
       this.log(`Mock handler "${m.route.key}" threw: ${(err as Error).stack}`);
       return sendJson(res, 500, { error: `stagecraft: mock handler "${m.route.key}" threw: ${(err as Error).message}` });
     }
-    if (method !== 'GET' && method !== 'HEAD') engine.dbChanged(s);
+    if (method !== 'GET' && method !== 'HEAD' && !(isReply(out) && out.readOnly)) engine.dbChanged(s);
     const headers = { 'x-stagecraft-mock': m.route.key };
     if (isReply(out)) return sendJson(res, out.status, out.body, { ...headers, ...out.headers });
     if (out === undefined) {

@@ -1,0 +1,30 @@
+{
+  "name": "ref-flags",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Reference repo for FR-403: real OpenFeature, LaunchDarkly (v3 + v4), GrowthBook and Unleash SDKs, served by Stagecraft with no call to the vendors.",
+  "scripts": {
+    "dev": "vite --port 5175 --strictPort",
+    "build": "vite build",
+    "stagecraft": "node ../../packages/cli/src/bin.ts"
+  },
+  "dependencies": {
+    "@growthbook/growthbook": "^1.6.0",
+    "@launchdarkly/js-client-sdk": "^4.14.0",
+    "@openfeature/react-sdk": "^1.1.0",
+    "@openfeature/web-sdk": "^1.6.0",
+    "@stagecraft/flags": "0.1.0",
+    "launchdarkly-js-client-sdk": "^3.9.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "unleash-proxy-client": "^3.7.0"
+  },
+  "devDependencies": {
+    "@stagecraft/core": "0.1.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "vite": "^6.3.5"
+  }
+}
