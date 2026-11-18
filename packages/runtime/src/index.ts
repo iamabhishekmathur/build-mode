@@ -6,6 +6,9 @@ import { mountPanel } from './panel.ts';
   const boot = window.__STAGECRAFT_BOOT__;
   if (!boot || window.__STAGECRAFT__) return;
   let info: SessionInfo = boot.session;
+  // Data version the page has rendered. Separate from info.dataVersion: rt.set() takes the PATCH
+  // response, which can arrive before the 'state' event, and then that event would look like "no data change".
+  let renderedData = info.dataVersion;
   let catalog = boot.catalog;
   const defaults = boot.defaults;
   const sid: string = info.id;
@@ -158,10 +161,12 @@ import { mountPanel } from './panel.ts';
       const e = JSON.parse(m.data);
       if (e.type === 'hello') {
         info = e.session;
+        renderedData = info.dataVersion;
         return;
       }
       if (e.type === 'state') {
-        const prevData = info.dataVersion;
+        const prevData = renderedData;
+        renderedData = e.dataVersion;
         info = { ...info, state: e.state, flags: e.flags, dataVersion: e.dataVersion, uiVersion: e.uiVersion };
         syncUrl();
         if (e.reason === 'data' && e.dataVersion !== prevData) {
