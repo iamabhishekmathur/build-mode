@@ -8,6 +8,7 @@ import { doctor } from './doctor.ts';
 import { dev } from './dev.ts';
 import { GITHUB_HELP, githubCommand } from './github.ts';
 import { init } from './init.ts';
+import { mocksCommand } from './generate/index.ts';
 import { loadRepos, workspaceCommand } from './workspace.ts';
 import { checkCommand, describeCommand, matrixCommand } from './checks.ts';
 import { shareCommand } from './share.ts';
@@ -34,6 +35,8 @@ Usage:
   stagecraft describe [--gate]    PR description: screens, states, scenarios, tapes, backend work, gate
   stagecraft share [path] [--expires 7d] [--password p] | share list | share revoke <id>
                                   Share link to a frozen copy of the current view (viewers: explore + comment)
+  stagecraft mocks generate --openapi <spec> | --types <file.ts> --type Name:/path [--out D] [--seed N]
+                                  Generate typed seed data, mock handlers and edge states (stagecraft/generated)
 ${GITHUB_HELP}  stagecraft mcp                  Run the MCP server on stdio (used by Claude Code, Codex, Cursor)
 `;
 
@@ -117,6 +120,8 @@ async function main() {
       for (const i of issues) console.log(`${i.path}: ${i.message}`);
       return 1;
     }
+    case 'mocks':
+      return mocksCommand(cwd, sub, rest, log);
     case 'mcp':
       await import('@stagecraft/mcp/bin');
       return null;

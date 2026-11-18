@@ -1,4 +1,5 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { join } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
@@ -70,6 +71,27 @@ export async function createMcpServer(opts: McpOptions = {}) {
 
   // GitHub: draft PRs, preview comments, branch-from, ready-for-review behind the gate. No merge tool.
   registerGithubTools(tool as any, { cwd: opts.cwd });
+
+  tool(
+    'mocks_generate',
+    'Generate typed seed data, a mock handler for every operation, and edge states (empty, one, many 1,200, long text, RTL, unicode) from an OpenAPI spec or exported TypeScript types. Writes stagecraft/generated/ (never edit it; regenerate) and returns the lines to spread into stagecraft/seed.ts, mocks.ts and states.ts.',
+    {
+      openapi: z.string().optional().describe('OpenAPI 3.x spec (JSON or YAML), relative to the repo'),
+      types: z.string().optional().describe('TypeScript file with exported API types'),
+      typeMap: z.array(z.string()).optional().describe('With types: "Name:/path", e.g. "Invoice:/v1/invoices" (plural = collection), "Account:/v1/account" (singleton)'),
+      out: z.string().optional().describe('Default stagecraft/generated'),
+      seed: z.number().int().optional().describe('Default 42; same seed → identical data'),
+      count: z.number().int().optional().describe('Rows per collection, default 8'),
+    },
+    async (a) => {
+      const file = findConfig(opts.cwd ?? process.cwd());
+      const cwd = file ? dirname(file) : (opts.cwd ?? process.cwd());
+      // Dynamic: the CLI package depends on this one.
+      const mod = 'stagecraft';
+      const { generateMocks } = await import(mod);
+      return generateMocks({ cwd, ...a });
+    },
+  );
 
   tool('setup_detect', 'Detect the repo stack (framework, package manager, dev command, router, API style, flags, design system, Storybook).', {}, async () => {
     if (!root) throw new Error('No stagecraft.config.ts found. Run "npx --no stagecraft init" first.');
