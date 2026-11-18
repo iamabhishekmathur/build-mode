@@ -29,6 +29,11 @@ beforeAll(async () => {
   next.stderr!.on('data', (d) => nextLog.push(String(d)));
   await until(async () => (await fetch(`http://localhost:${port}/`, { headers: { accept: 'text/html' } }).catch(() => null))?.ok, 90_000, 500);
   browser = await chromium.launch();
+  // Warm up: Next compiles each route and client chunk on first use, and may reload the page then.
+  const p = await browser.newPage();
+  for (const path of ['/', '/settings']) await p.goto(base + path, { waitUntil: 'networkidle' });
+  await p.waitForTimeout(2000);
+  await p.close();
 }, 120_000);
 
 afterAll(async () => {

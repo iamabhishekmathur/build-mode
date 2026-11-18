@@ -33,6 +33,39 @@ export interface TapeTransportConfig {
   transport?: 'sse' | 'websocket';
 }
 
+/** One repo in a multi-repo workspace. Paths are relative to the host repo (the one with this config). */
+export interface WorkspaceRepo {
+  /** Folder of the checkout, e.g. `../acme-ui`. */
+  path: string;
+  /** Clone URL. `stagecraft workspace clone` uses it when the folder is missing. */
+  git?: string;
+  /**
+   * `app`: another frontend with its own dev server, served through the same proxy.
+   * `library`: a package the apps consume (design system, API client). Linked for dev.
+   * `api`: a backend repo. Read-only; its OpenAPI spec checks the mocks.
+   */
+  role: 'app' | 'library' | 'api' | 'other';
+  /** library: npm package name to link, e.g. `@acme/ui`. */
+  package?: string;
+  /** library: folder inside the repo that holds the package (monorepo libraries). Default: repo root. */
+  packagePath?: string;
+  /** app: dev server. */
+  devCommand?: string;
+  devUrl?: string;
+  /** app: path prefix on the proxy, e.g. `/admin` (the app must use this base path). */
+  mount?: string;
+  /** app: or a separate proxy port, for apps that cannot use a base path. */
+  port?: number;
+  /** api: OpenAPI spec file (JSON or YAML), relative to the repo. */
+  openapi?: string;
+  /** Prototypes never change this repo (default true for `api`). */
+  readOnly?: boolean;
+}
+
+export interface WorkspaceConfig {
+  repos: Record<string, WorkspaceRepo>;
+}
+
 export interface StagecraftConfig<DB = any> {
   /** Command that starts the app's dev server. */
   devCommand?: string;
@@ -57,6 +90,8 @@ export interface StagecraftConfig<DB = any> {
   tapes?: TapeTransportConfig;
   /** `session` (default): each session has its own DB. `shared`: one DB for everyone. */
   dbMode?: DbMode;
+  /** Multi-repo workspace: other repos that make up the product. */
+  workspace?: WorkspaceConfig;
   /** What to do with requests to API origins that have no handler. Default `404`. */
   unmocked?: 'error' | '404';
 }

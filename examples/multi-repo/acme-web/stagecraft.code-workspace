@@ -1,0 +1,20 @@
+{
+  "folders": [
+    {
+      "name": "host",
+      "path": "."
+    },
+    {
+      "name": "ui",
+      "path": "../acme-ui"
+    },
+    {
+      "name": "admin",
+      "path": "../acme-admin"
+    },
+    {
+      "name": "api",
+      "path": "../acme-api"
+    }
+  ]
+}

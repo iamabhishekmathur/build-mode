@@ -1,0 +1,1 @@
+{ "$schema": "https://stagecraft.dev/schema/scenario.v1.json", "name": "Frozen customer", "persona": "owner", "states": { "account": "frozen" }, "url": "/" }

@@ -7,19 +7,23 @@ import { drift, sync } from './agents.ts';
 import { doctor } from './doctor.ts';
 import { dev } from './dev.ts';
 import { init } from './init.ts';
+import { loadRepos, workspaceCommand } from './workspace.ts';
 
 const HELP = `stagecraft — prototype in the real product on mock data
 
 Usage:
   stagecraft init                 Detect the stack and add config, mocks, agent instructions, skills and MCP config
   stagecraft detect               Write stagecraft.detect.json
-  stagecraft dev [--port N] [--no-dev-server] [--host H]
+  stagecraft dev [--port N] [--no-dev-server] [--no-link] [--host H]
                                   Start the dev server and the Stagecraft proxy
   stagecraft doctor               Check config, mocks, scenarios, tapes, mock leakage and agent files
   stagecraft agents sync          Regenerate AGENTS.md, CLAUDE.md, Cursor rules and skills from stagecraft/agents.md
   stagecraft agents check         Exit 1 if generated agent files drifted (for CI)
   stagecraft scenario list        List saved scenarios
   stagecraft tape validate <file> Validate a tape file
+  stagecraft workspace status|clone|link|unlink|branch <name>
+                                  Multi-repo products: repo status, clone missing repos, dev-link
+                                  library packages, one prototype branch across repos
   stagecraft mcp                  Run the MCP server on stdio (used by Claude Code, Codex, Cursor)
 `;
 
@@ -45,7 +49,7 @@ async function main() {
     }
     case 'dev': {
       const port = flag(args, '--port');
-      await dev(cwd, { port: port ? Number(port) : undefined, noDevServer: args.includes('--no-dev-server'), host: flag(args, '--host') });
+      await dev(cwd, { port: port ? Number(port) : undefined, noDevServer: args.includes('--no-dev-server'), noLink: args.includes('--no-link'), host: flag(args, '--host') });
       return null;
     }
     case 'doctor': {
@@ -55,15 +59,17 @@ async function main() {
       for (const m of r.errors) console.log(`✗ ${m}`);
       return r.errors.length ? 1 : 0;
     }
+    case 'workspace':
+      return workspaceCommand(cwd, sub, rest, log);
     case 'agents': {
-      const root = findConfig(cwd) ? join(findConfig(cwd)!, '..') : cwd;
+      const { root, repos } = await loadRepos(cwd);
       if (sub === 'sync') {
-        const w = sync(root);
+        const w = sync(root, repos);
         console.log(w.length ? w.map((f) => `wrote ${f}`).join('\n') : 'Agent files are up to date.');
         return 0;
       }
       if (sub === 'check') {
-        const d = drift(root);
+        const d = drift(root, repos);
         if (d.length) {
           console.log(`Out of sync: ${d.join(', ')}\nRun "npx stagecraft agents sync".`);
           return 1;

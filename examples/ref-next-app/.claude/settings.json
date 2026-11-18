@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__stagecraft",
+      "Bash(npx stagecraft:*)",
+      "Bash(npx tsc:*)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "stagecraft"
+  ]
+}

@@ -41,7 +41,7 @@ describe('stagecraft-mcp (FR-302, FR-505)', () => {
   it('exposes the tool list with API-safe names and schemas', async () => {
     const { tools } = await client.listTools();
     const names = tools.map((t) => t.name);
-    for (const n of ['setup_detect', 'state_catalog', 'state_set', 'persona_set', 'flags_list', 'flags_set', 'variant_list', 'variant_select', 'scenario_save', 'scenario_load', 'scenario_list', 'mockdb_query', 'mockdb_seed', 'mockdb_reset', 'mock_endpoints', 'fault_set', 'tape_create', 'tape_validate', 'tape_play', 'tape_control', 'preview_url', 'preview_navigate', 'preview_screenshot', 'session_get']) {
+    for (const n of ['setup_detect', 'state_catalog', 'state_set', 'persona_set', 'flags_list', 'flags_set', 'variant_list', 'variant_select', 'scenario_save', 'scenario_load', 'scenario_list', 'mockdb_query', 'mockdb_seed', 'mockdb_reset', 'mock_endpoints', 'fault_set', 'tape_create', 'tape_validate', 'tape_play', 'tape_control', 'preview_url', 'preview_navigate', 'preview_screenshot', 'session_get', 'workspace_status']) {
       expect(names).toContain(n);
     }
     // Anthropic and OpenAI tool-name rule.

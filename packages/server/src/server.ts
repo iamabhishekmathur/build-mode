@@ -9,6 +9,7 @@ import { Engine, UserError, type PatchInput, type Session } from './engine.ts';
 import { compile, matchRoute } from './routes.ts';
 import type { TapeClient } from './tape-player.ts';
 import { comparePage } from './compare.ts';
+import { resolveWorkspace } from './workspace.ts';
 
 export const SESSION_HEADER = 'x-stagecraft-session';
 const ONE_SHOT_PARAMS = ['sc_scenario', 'sc_tape', 'sc_step', 'sc_play', 'sc_panel'];
@@ -18,6 +19,8 @@ export interface ServerOptions {
   host?: string;
   /** Override the dev server URL from config. */
   devUrl?: string;
+  /** Route workspace app mounts (default true). Port-mounted app servers pass false. */
+  mounts?: boolean;
   log?: (m: string) => void;
   watch?: boolean;
   tapeSpeed?: number;
@@ -139,6 +142,18 @@ export class StagecraftServer {
    * `__sc_session` in the Referer (full page navigations and assets inside a forked tab or frame) > main.
    * No cookies on purpose: compare frames are separate sessions in one browser.
    */
+  /** Dev server for a path: a workspace app mounted on a prefix, else the host app. */
+  upstreamFor(path: string): URL {
+    if (this.opts.mounts === false) return this.devUrl;
+    let best: { prefix: string; url: string } | null = null;
+    for (const r of resolveWorkspace(this.engine.root, this.engine.config)) {
+      if (r.role !== 'app' || !r.mount || !r.devUrl) continue;
+      const prefix = r.mount.replace(/\/$/, '');
+      if ((path === prefix || path.startsWith(prefix + '/')) && (!best || prefix.length > best.prefix.length)) best = { prefix, url: r.devUrl };
+    }
+    return best ? new URL(best.url) : this.devUrl;
+  }
+
   sessionFor(req: IncomingMessage, url: URL): Session {
     let id = (req.headers[SESSION_HEADER] as string | undefined) ?? url.searchParams.get('__sc_sid') ?? undefined;
     if (!id && req.headers.referer) {
@@ -288,10 +303,11 @@ export class StagecraftServer {
       return;
     }
     // Pass everything else (HMR) through to the dev server.
-    const target = net.connect(Number(this.devUrl.port || 80), this.devUrl.hostname, () => {
+    const up = this.upstreamFor(url.pathname);
+    const target = net.connect(Number(up.port || 80), up.hostname, () => {
       // Dev servers (Next.js) check Host and Origin on the HMR socket: present ourselves as same-origin.
-      const fwd: Record<string, string | string[] | undefined> = { ...req.headers, host: this.devUrl.host };
-      if (fwd.origin) fwd.origin = this.devUrl.origin;
+      const fwd: Record<string, string | string[] | undefined> = { ...req.headers, host: up.host };
+      if (fwd.origin) fwd.origin = up.origin;
       const headers = Object.entries(fwd)
         .filter(([, v]) => v !== undefined)
         .map(([k, v]) => (Array.isArray(v) ? v.map((x) => `${k}: ${x}`).join('\r\n') : `${k}: ${v}`))
@@ -365,12 +381,13 @@ export class StagecraftServer {
     // Tell the dev server which session this request belongs to, so server-side fetches
     // (SSR, React Server Components) read the same mock DB as the browser (see preload.mjs).
     const sid = doc ? doc.session.id : this.sessionFor(req, url).id;
-    const headers: http.OutgoingHttpHeaders = { ...req.headers, host: this.devUrl.host, [SESSION_HEADER]: sid };
+    const up = this.upstreamFor(url.pathname);
+    const headers: http.OutgoingHttpHeaders = { ...req.headers, host: up.host, [SESSION_HEADER]: sid };
     // Same reason as for upgrades: dev servers block cross-origin requests to their dev endpoints.
-    if (headers.origin) headers.origin = this.devUrl.origin;
+    if (headers.origin) headers.origin = up.origin;
     if (isDoc) headers['accept-encoding'] = 'identity';
     const upstream = http.request(
-      { hostname: this.devUrl.hostname, port: this.devUrl.port || 80, path: req.url, method: req.method, headers },
+      { hostname: up.hostname, port: up.port || 80, path: req.url, method: req.method, headers },
       (up) => {
         const type = String(up.headers['content-type'] ?? '');
         if (!doc || !type.includes('text/html')) {
@@ -401,7 +418,7 @@ export class StagecraftServer {
       if (!res.headersSent) {
         res.writeHead(502, { 'content-type': 'text/html; charset=utf-8' });
         res.end(
-          `<!doctype html><title>Stagecraft: dev server not reachable</title><body style="font:16px system-ui;padding:40px"><h1>Dev server not reachable</h1><p>Stagecraft could not reach <code>${this.devUrl.href}</code>: ${err.message}.</p><p>Start it, or check <code>devUrl</code> in stagecraft.config.ts. This page retries in 2 s.</p><script>setTimeout(()=>location.reload(),2000)</script>`,
+          `<!doctype html><title>Stagecraft: dev server not reachable</title><body style="font:16px system-ui;padding:40px"><h1>Dev server not reachable</h1><p>Stagecraft could not reach <code>${up.href}</code>: ${err.message}.</p><p>Start it, or check <code>devUrl</code> in stagecraft.config.ts. This page retries in 2 s.</p><script>setTimeout(()=>location.reload(),2000)</script>`,
         );
       } else res.end();
     });
@@ -540,5 +557,18 @@ export async function startServer(configFile: string, opts: ServerOptions = {}) 
   const engine = await new Engine(configFile, { log: opts.log, tapeSpeed: opts.tapeSpeed }).init();
   const server = new StagecraftServer(engine, opts);
   const { url, port } = await server.listen();
-  return { engine, server, url, port };
+  // Workspace apps that cannot run under a path prefix get their own port, on the same engine
+  // (same sessions and mock DB).
+  const apps: { name: string; url: string; server: StagecraftServer }[] = [];
+  for (const r of resolveWorkspace(engine.root, engine.config)) {
+    if (r.role !== 'app' || r.host || r.port === undefined || !r.devUrl) continue;
+    const s = new StagecraftServer(engine, { ...opts, port: r.port, devUrl: r.devUrl, mounts: false, watch: false });
+    apps.push({ name: r.name, url: (await s.listen()).url, server: s });
+  }
+  const close = server.close.bind(server);
+  server.close = async () => {
+    await Promise.all(apps.map((a) => a.server.close()));
+    await close();
+  };
+  return { engine, server, url, port, apps };
 }

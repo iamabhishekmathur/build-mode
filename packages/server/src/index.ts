@@ -5,3 +5,4 @@ export * from './tape-player.ts';
 export { compile, matchRoute } from './routes.ts';
 export * from './detect.ts';
 export * from './dev-env.ts';
+export * from './workspace.ts';

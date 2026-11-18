@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { validateTape } from '@stagecraft/core';
-import { detect, findConfig, loadConfig } from '@stagecraft/server';
+import { detect, findConfig, loadConfig, resolveWorkspace, workspaceStatus } from '@stagecraft/server';
 
 /**
  * Tool names use underscores, not the dots in the PRD (`state.set`).
@@ -68,6 +68,18 @@ export async function createMcpServer(opts: McpOptions = {}) {
     if (!root) throw new Error('No stagecraft.config.ts found. Run "npx stagecraft init" first.');
     return detect(root);
   });
+
+  tool(
+    'workspace_status',
+    'Multi-repo products: every repo (host, apps, libraries, API), its role, branch, changed files and library links. Use it to see which repos a change touched; a handoff is one PR per changed repo.',
+    {},
+    async () => {
+      const file = findConfig(opts.cwd ?? process.cwd());
+      if (!file) throw new Error('No stagecraft.config.ts found.');
+      const { config, root: r } = await loadConfig(file);
+      return workspaceStatus(resolveWorkspace(r, config));
+    },
+  );
 
   tool('session_get', 'Current persona, states, flags, variants, faults, scenario and tape for a session, plus a shareable link.', { session }, (a) => call('GET', '/session', undefined, a.session));
 

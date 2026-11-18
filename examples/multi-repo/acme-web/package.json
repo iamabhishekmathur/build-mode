@@ -1,0 +1,1 @@
+{ "name": "acme-web", "private": true, "type": "module", "scripts": { "dev": "vite --port 5191 --strictPort" } }

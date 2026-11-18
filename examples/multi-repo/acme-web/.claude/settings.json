@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__stagecraft",
+      "Bash(npx stagecraft:*)",
+      "Bash(npx tsc:*)"
+    ],
+    "additionalDirectories": [
+      "../acme-ui",
+      "../acme-admin",
+      "../acme-api"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "stagecraft"
+  ]
+}

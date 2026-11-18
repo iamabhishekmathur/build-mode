@@ -1,0 +1,11 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Acme API", "version": "2026-11" },
+  "servers": [{ "url": "https://api.acme.example" }],
+  "paths": {
+    "/v1/me": { "get": { "operationId": "getMe", "responses": { "200": { "description": "Signed-in user" } } } },
+    "/v1/account": { "get": { "operationId": "getAccount", "responses": { "200": { "description": "Account" } } } },
+    "/v1/account/unfreeze": { "post": { "operationId": "unfreezeAccount", "responses": { "200": { "description": "Account" } } } },
+    "/v1/payments": { "get": { "operationId": "listPayments", "responses": { "200": { "description": "Payments" } } } }
+  }
+}

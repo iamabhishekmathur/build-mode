@@ -17,4 +17,5 @@ description: Prepare a prototype for an engineer: clean variants, check for mock
    - Figma links
    - Mocked endpoints the backend must build (from `mock_endpoints` and new handlers in `stagecraft/mocks.ts`)
    - Known gaps
-6. Do not merge and do not mark the PR ready yourself. A human does that.
+6. **Multi-repo products:** call `workspace_status`. Every changed repo gets its own PR on the same branch name. Library PRs (for example the design system) merge first; app PRs depend on them. Link the PRs to each other in their descriptions. Read-only repos (the API) must have no changes: list the backend work in the app PR instead.
+7. Do not merge and do not mark the PR ready yourself. A human does that.

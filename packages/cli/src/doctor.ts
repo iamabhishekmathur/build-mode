@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { resolveScenario } from '@stagecraft/core';
-import { compile, Engine, findConfig } from '@stagecraft/server';
+import { compile, Engine, findConfig, readOpenApi, resolveWorkspace, specCoverage, workspaceStatus } from '@stagecraft/server';
 import { drift } from './agents.ts';
 
 export interface DoctorReport {
@@ -103,7 +103,44 @@ export async function doctor(cwd: string): Promise<DoctorReport> {
   if (leaks.length) r.errors.push(`Product code imports mock code from stagecraft/ (FR-507):\n    ${leaks.join('\n    ')}`);
   else r.ok.push('No product code imports from stagecraft/.');
 
-  const d = drift(root);
+  // ---------- multi-repo workspace ----------
+  const repos = resolveWorkspace(root, engine.config);
+  if (repos.length > 1) {
+    const st = workspaceStatus(repos);
+    for (const x of st) {
+      if (!x.present) (x.role === 'library' || x.role === 'app' ? r.errors : r.warnings).push(`Workspace repo "${x.name}" is missing at ${x.path}. Run "npx stagecraft workspace clone".`);
+      for (const l of x.links) if (!l.linked) r.warnings.push(`${l.package} is not linked into ${l.consumer}: edits in the library repo will not show. Run "npx stagecraft workspace link" (or "stagecraft dev" links it).`);
+    }
+    // npm-link style links load the library's own React if it has one: two Reacts break hooks.
+    for (const lib of repos.filter((x) => x.role === 'library' && existsSync(x.abs))) {
+      const libReact = join(lib.abs, lib.packagePath ?? '.', 'node_modules', 'react');
+      if (existsSync(libReact)) {
+        r.warnings.push(`${lib.name} has its own node_modules/react. Linked, the apps may load two copies of React. Fix: dedupe react/react-dom in the app bundler (Vite: resolve.dedupe), or remove react from the library's node_modules.`);
+      }
+    }
+    const branches = new Set(st.filter((x) => !x.readOnly && x.changedFiles.length && x.branch).map((x) => x.branch));
+    if (branches.size > 1) r.warnings.push(`Changed repos are on different branches (${[...branches].join(', ')}). Run "npx stagecraft workspace branch <name>".`);
+    for (const x of st) if (x.readOnly && x.changedFiles.length) r.warnings.push(`Read-only repo "${x.name}" has changes: ${x.changedFiles.slice(0, 5).join(', ')}`);
+    if (!r.errors.length) r.ok.push(`Workspace: ${repos.length - 1} repos (${repos.filter((x) => !x.host).map((x) => `${x.name}:${x.role}`).join(', ')}).`);
+    // Mocks vs the API contract.
+    for (const api of repos.filter((x) => x.openapi)) {
+      const spec = join(api.abs, api.openapi!);
+      if (!existsSync(spec)) {
+        r.warnings.push(`OpenAPI spec not found: ${api.path}/${api.openapi}`);
+        continue;
+      }
+      try {
+        const cov = specCoverage(readOpenApi(spec), engine.routes);
+        if (cov.unmocked.length) r.warnings.push(`API operations in ${api.name}/${api.openapi} with no mock:\n    ${cov.unmocked.join('\n    ')}`);
+        if (cov.notInSpec.length) r.warnings.push(`Mocks for endpoints that are not in the ${api.name} spec (the prototype may rely on an API that does not exist):\n    ${cov.notInSpec.join('\n    ')}`);
+        if (!cov.unmocked.length && !cov.notInSpec.length) r.ok.push(`Mocks match the ${api.name} OpenAPI spec.`);
+      } catch (e) {
+        r.warnings.push(`Could not read ${api.path}/${api.openapi}: ${(e as Error).message}`);
+      }
+    }
+  }
+
+  const d = drift(root, repos);
   if (d.length) r.warnings.push(`Agent files are out of date with stagecraft/agents.md: ${d.join(', ')}. Run "npx stagecraft agents sync".`);
   else r.ok.push('Agent instructions and skills are in sync.');
 
