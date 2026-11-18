@@ -9,6 +9,7 @@ import { fixture, until } from '../helpers.ts';
 /** A fake dev server: HTML with a strict CSP, a JS file, and a "real backend" route that must never be hit. */
 let upstream: http.Server;
 let upstreamHits: string[] = [];
+let upstreamHeaders: http.IncomingHttpHeaders[] = [];
 let base: string;
 let server: StagecraftServer;
 let engine: Engine;
@@ -16,6 +17,7 @@ let engine: Engine;
 beforeAll(async () => {
   upstream = http.createServer((req, res) => {
     upstreamHits.push(req.url!);
+    upstreamHeaders.push(req.headers);
     if (req.url!.startsWith('/app.js')) {
       res.writeHead(200, { 'content-type': 'text/javascript' });
       return res.end('console.log(1)');
@@ -198,5 +200,30 @@ describe('websocket tape transport (FR-703)', () => {
     expect(got.map((e) => e.type)).toContain('user_message');
     ws.close();
     await s.server.close();
+  });
+});
+
+describe('session propagation for server rendering (SSR)', () => {
+  it('forwards the session to the dev server and rewrites Origin to the dev origin', async () => {
+    const sid = engine.fork('main').id;
+    upstreamHeaders = [];
+    await fetch(`${base}/app.js`, { headers: { 'x-stagecraft-session': sid, origin: base } });
+    expect(upstreamHeaders[0]![`x-stagecraft-session`]).toBe(sid);
+    expect(upstreamHeaders[0]!.origin).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
+    expect(upstreamHeaders[0]!.origin).not.toBe(base);
+  });
+
+  it('finds a forked session from the Referer on full navigations', async () => {
+    const f = engine.fork('main');
+    engine.patch(f, { persona: 'employee' });
+    upstreamHeaders = [];
+    const r = await fetch(`${base}/payments`, { headers: { accept: 'text/html', referer: `${base}/?__sc_session=${f.id}` } });
+    const boot = JSON.parse(/__STAGECRAFT_BOOT__=(.*?);<\/script>/.exec(await r.text())![1]!);
+    expect(boot.session.id).toBe(f.id);
+    expect(upstreamHeaders[0]!['x-stagecraft-session']).toBe(f.id);
+    // An unknown id in the Referer falls back to main.
+    upstreamHeaders = [];
+    await fetch(`${base}/x`, { headers: { accept: 'text/html', referer: `${base}/?__sc_session=nope` } });
+    expect(upstreamHeaders[0]!['x-stagecraft-session']).toBe('main');
   });
 });

@@ -134,9 +134,23 @@ export class StagecraftServer {
     }
   }
 
+  /**
+   * Session for a request: header (runtime) > `__sc_sid` query (EventSource, WebSocket) >
+   * `__sc_session` in the Referer (full page navigations and assets inside a forked tab or frame) > main.
+   * No cookies on purpose: compare frames are separate sessions in one browser.
+   */
   sessionFor(req: IncomingMessage, url: URL): Session {
-    const id = (req.headers[SESSION_HEADER] as string | undefined) ?? url.searchParams.get('__sc_sid') ?? 'main';
-    return this.engine.getSession(id);
+    let id = (req.headers[SESSION_HEADER] as string | undefined) ?? url.searchParams.get('__sc_sid') ?? undefined;
+    if (!id && req.headers.referer) {
+      try {
+        const ref = new URL(req.headers.referer);
+        const fromRef = ref.searchParams.get('__sc_session');
+        if (fromRef && !fromRef.startsWith('fork') && this.engine.hasSession(fromRef)) id = fromRef;
+      } catch {
+        /* bad referer */
+      }
+    }
+    return this.engine.getSession(id ?? 'main');
   }
 
   private async handle(req: IncomingMessage, res: ServerResponse) {
@@ -275,7 +289,11 @@ export class StagecraftServer {
     }
     // Pass everything else (HMR) through to the dev server.
     const target = net.connect(Number(this.devUrl.port || 80), this.devUrl.hostname, () => {
-      const headers = Object.entries(req.headers)
+      // Dev servers (Next.js) check Host and Origin on the HMR socket: present ourselves as same-origin.
+      const fwd: Record<string, string | string[] | undefined> = { ...req.headers, host: this.devUrl.host };
+      if (fwd.origin) fwd.origin = this.devUrl.origin;
+      const headers = Object.entries(fwd)
+        .filter(([, v]) => v !== undefined)
         .map(([k, v]) => (Array.isArray(v) ? v.map((x) => `${k}: ${x}`).join('\r\n') : `${k}: ${v}`))
         .join('\r\n');
       target.write(`${req.method} ${req.url} HTTP/${req.httpVersion}\r\n${headers}\r\n\r\n`);
@@ -344,7 +362,12 @@ export class StagecraftServer {
     const isDoc = req.method === 'GET' && /text\/html/.test(String(req.headers.accept ?? ''));
     let doc: { session: Session; panel: boolean } | null = null;
     if (isDoc) doc = this.applyDocumentParams(req, url);
-    const headers = { ...req.headers, host: this.devUrl.host };
+    // Tell the dev server which session this request belongs to, so server-side fetches
+    // (SSR, React Server Components) read the same mock DB as the browser (see preload.mjs).
+    const sid = doc ? doc.session.id : this.sessionFor(req, url).id;
+    const headers: http.OutgoingHttpHeaders = { ...req.headers, host: this.devUrl.host, [SESSION_HEADER]: sid };
+    // Same reason as for upgrades: dev servers block cross-origin requests to their dev endpoints.
+    if (headers.origin) headers.origin = this.devUrl.origin;
     if (isDoc) headers['accept-encoding'] = 'identity';
     const upstream = http.request(
       { hostname: this.devUrl.hostname, port: this.devUrl.port || 80, path: req.url, method: req.method, headers },

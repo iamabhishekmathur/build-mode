@@ -1,0 +1,16 @@
+:root { --bg:#f7f7f5; --fg:#1c1c1e; --muted:#6a6a6f; --line:#e3e3e0; --brand:#0f6b5c; --warn-bg:#fff4dd; --warn:#7a4b00; --bad-bg:#fdecec; --bad:#a61b1b; --space:16px; }
+* { box-sizing: border-box; }
+body { margin:0; font:15px/1.5 ui-sans-serif, system-ui, sans-serif; background:var(--bg); color:var(--fg); }
+.nav { display:flex; gap:var(--space); align-items:center; padding:12px 24px; background:#fff; border-bottom:1px solid var(--line); }
+.nav a { color:var(--fg); text-decoration:none; }
+.spacer { flex:1; }
+.main { padding:24px; max-width:960px; }
+.muted { color:var(--muted); }
+.banner { padding:12px 16px; border-radius:10px; margin:12px 0; }
+.banner--past_due { background:var(--warn-bg); color:var(--warn); }
+.banner--suspended { background:var(--bad-bg); color:var(--bad); }
+.table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); }
+.table td { padding:8px 12px; border-bottom:1px solid var(--line); }
+.num { text-align:right; font-variant-numeric:tabular-nums; }
+.status--overdue { color:var(--bad); } .status--paid { color:var(--brand); }
+.btn { font:inherit; padding:4px 10px; border-radius:8px; border:1px solid var(--brand); background:var(--brand); color:#fff; cursor:pointer; }

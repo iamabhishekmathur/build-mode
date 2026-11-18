@@ -1,10 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { findConfig, startServer } from '@stagecraft/server';
-
-/** Names that look like production secrets. Never passed to the dev server. */
-const DENY = /^(?:.*_)?(?:PROD|PRODUCTION)_|DATABASE_URL|_SECRET$|_SECRET_KEY$|PRIVATE_KEY|AWS_SECRET|STRIPE_SECRET/i;
+import { devServerEnv, findConfig, startServer } from '@stagecraft/server';
 
 function envFile(root: string): Record<string, string> {
   const f = join(root, '.env.stagecraft');
@@ -38,11 +35,10 @@ export async function dev(cwd: string, opts: { port?: number; noDevServer?: bool
   let child: ChildProcess | null = null;
   const cfg = engine.config;
   if (!opts.noDevServer && cfg.devCommand) {
-    const env: Record<string, string> = {};
-    for (const [k, v] of Object.entries(process.env)) if (v !== undefined && !DENY.test(k)) env[k] = v;
-    Object.assign(env, envFile(root), { STAGECRAFT: '1', VITE_STAGECRAFT: '1' });
+    const env = devServerEnv({ proxyUrl: url, apiOrigins: cfg.apiOrigins, extra: envFile(root) });
     engine.log(`Starting dev server: ${cfg.devCommand}`);
-    child = spawn(cfg.devCommand, { cwd: root, env, shell: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    // Own process group, so stopping kills the whole tree (npm → next → workers), not just the shell.
+    child = spawn(cfg.devCommand, { cwd: root, env, shell: true, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
     child.stdout!.on('data', (d) => process.stdout.write(`[dev] ${d}`));
     child.stderr!.on('data', (d) => process.stderr.write(`[dev] ${d}`));
     child.on('exit', (code) => engine.log(`Dev server exited (${code})`));
@@ -52,7 +48,13 @@ export async function dev(cwd: string, opts: { port?: number; noDevServer?: bool
   engine.log(`Ready: ${url}  (dev server ${cfg.devUrl})`);
   engine.log('Open the URL above. The Stagecraft panel is at the bottom right (Alt+Shift+S hides it).');
   const stop = async () => {
-    child?.kill('SIGTERM');
+    if (child?.pid) {
+      try {
+        process.kill(-child.pid, 'SIGTERM');
+      } catch {
+        child.kill('SIGTERM');
+      }
+    }
     await server.close();
     process.exit(0);
   };

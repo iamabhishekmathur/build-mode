@@ -18,7 +18,6 @@ import { mountPanel } from './panel.ts';
 
   // ---------- network routing ----------
   const here = location.origin;
-  const pathOrigins: string[] = catalog.apiOrigins.filter((o: string) => o.startsWith('/'));
   const fullOrigins: string[] = catalog.apiOrigins.filter((o: string) => !o.startsWith('/')).map((o: string) => new URL(o).origin);
 
   /** Returns the URL to use and whether to tag it with the session. */
@@ -30,9 +29,9 @@ import { mountPanel } from './panel.ts';
       return { url: input, tag: false };
     }
     if (u.origin === here) {
-      const p = u.pathname;
-      const tag = p.startsWith('/__stagecraft/') || pathOrigins.some((o) => p === o || p.startsWith(o.endsWith('/') ? o : o + '/'));
-      return { url: input, tag };
+      // Tag every same-origin request: server-rendered frameworks fetch data on the server
+      // for page and RSC requests, and the proxy must know the session for those too.
+      return { url: input, tag: true };
     }
     const wsToHttp = u.protocol === 'wss:' ? 'https:' : u.protocol === 'ws:' ? 'http:' : u.protocol;
     const origin = `${wsToHttp}//${u.host}`;
@@ -121,6 +120,30 @@ import { mountPanel } from './panel.ts';
     } catch {
       /* ignore */
     }
+  }
+
+  // Client routers (Next.js, React Router) rewrite the URL on navigation. Keep our params on it, so
+  // links stay reproducible (FR-806) and later requests can find a forked session via the Referer.
+  for (const fn of ['pushState', 'replaceState'] as const) {
+    const orig = history[fn].bind(history);
+    history[fn] = (data: any, unused: string, url?: string | URL | null) => {
+      if (url !== undefined && url !== null) {
+        try {
+          const u = new URL(String(url), location.href);
+          if (u.origin === location.origin) {
+            const cur = new URL(location.href).searchParams;
+            for (const k of ['__sc_session', '__sc']) {
+              const v = cur.get(k);
+              if (v && !u.searchParams.has(k)) u.searchParams.set(k, v);
+            }
+            url = u.pathname + u.search + u.hash;
+          }
+        } catch {
+          /* leave url as is */
+        }
+      }
+      return orig(data, unused, url);
+    };
   }
 
   // ---------- events from the proxy ----------

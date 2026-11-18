@@ -41,15 +41,20 @@ const DataVersion = createContext(0);
 /**
  * Wrap the app (inside your router). On persona, state or scenario changes it remounts
  * its children so data refetches. Without it, Stagecraft falls back to a full page reload.
+ * For server-rendered data, pass `onDataChange` (Next.js App Router: `() => router.refresh()`).
  */
-export function StagecraftRoot({ children }: { children: ReactNode }) {
+export function StagecraftRoot({ children, onDataChange }: { children: ReactNode; onDataChange?: () => void }) {
   const rt = runtime();
   const [dataVersion, setDataVersion] = useState(() => rt?.info.dataVersion ?? 0);
   useEffect(() => {
     if (!rt) return;
     rt.registerAdapter('react');
-    return rt.on('data', (info) => setDataVersion(info.dataVersion));
-  }, [rt]);
+    return rt.on('data', (info) => {
+      // Server-rendered apps pass a refresh (Next.js: router.refresh()) so server data reloads too.
+      onDataChange?.();
+      setDataVersion(info.dataVersion);
+    });
+  }, [rt, onDataChange]);
   return (
     <DataVersion.Provider value={dataVersion}>
       <Fragment key={dataVersion}>{children}</Fragment>
