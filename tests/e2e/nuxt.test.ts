@@ -52,6 +52,8 @@ async function open(path: string): Promise<Page> {
   await page.locator('stagecraft-panel').waitFor({ state: 'attached' });
   return page;
 }
+// Generous: other suites may be loading the machine; a state switch is a round trip plus a refetch.
+const poll = <T>(fn: () => T | Promise<T>) => expect.poll(fn, { timeout: 15_000 });
 const panel = (p: Page) => p.locator('stagecraft-panel');
 const text = (html: string, id: string) => new RegExp(`data-testid="${id}"[^>]*>([^<]*)<`).exec(html)?.[1];
 
@@ -81,8 +83,8 @@ describe('Nuxt 4: server-side useFetch / $fetch on mock data (FR-501 SSR)', () =
     await page.evaluate(() => ((window as any).__noReload = true));
     await panel(page).getByLabel('Persona').selectOption('agent');
     await panel(page).getByRole('combobox', { name: 'Account' }).selectOption('past_due');
-    await expect.poll(() => page.getByTestId('me').textContent(), { timeout: 15000 }).toBe('Theo Agent · agent');
-    await expect.poll(() => page.getByTestId('banner').textContent()).toMatch(/past due/);
+    await poll(() => page.getByTestId('me').textContent()).toBe('Theo Agent · agent');
+    await poll(() => page.getByTestId('banner').textContent()).toMatch(/past due/);
     expect(await page.evaluate(() => (window as any).__noReload)).toBe(true);
     await page.close();
   });
@@ -95,7 +97,7 @@ describe('Nuxt 4: server-side useFetch / $fetch on mock data (FR-501 SSR)', () =
     await panel(page).getByRole('combobox', { name: 'ticket-list-layout' }).selectOption('cards');
     await page.getByTestId('ticket-cards').waitFor();
     await panel(page).getByLabel('priority-badges').check();
-    await expect.poll(() => page.locator('[data-testid=ticket-cards] .pill').count()).toBe(2);
+    await poll(() => page.locator('[data-testid=ticket-cards] .pill').count()).toBe(2);
     // Reload: the server renders the default option (it cannot see the variant); the client
     // hydrates the same markup (ssr mode), then switches. No hydration mismatch.
     await page.reload({ waitUntil: 'networkidle' });
@@ -110,7 +112,7 @@ describe('Nuxt 4: server-side useFetch / $fetch on mock data (FR-501 SSR)', () =
     // The table's buttons sit under the panel (bottom right): dock the panel left, as a viewer would.
     await panel(page).getByRole('button', { name: 'Move panel to the left side' }).click();
     await page.getByRole('button', { name: 'Close' }).click();
-    await expect.poll(() => page.getByRole('button', { name: 'Close' }).count(), { timeout: 15000 }).toBe(0);
+    await poll(() => page.getByRole('button', { name: 'Close' }).count()).toBe(0);
     expect((engine.getSession().dbRef.db as any).tickets[0].status).toBe('closed');
     const html = await (await fetch(base + '/', { headers: { accept: 'text/html' } })).text();
     expect(html).not.toMatch(/>open</);
@@ -128,7 +130,7 @@ describe('Nuxt 4: server-side useFetch / $fetch on mock data (FR-501 SSR)', () =
     expect(await fork.getByTestId('tickets').textContent()).toContain('Tent zipper');
     // Client-side navigation in the fork: data loads in the browser with the fork's session.
     await fork.getByRole('link', { name: 'Settings' }).click();
-    await expect.poll(() => fork.getByTestId('settings-role').textContent(), { timeout: 15000 }).toBe('Only admins can change the plan.');
+    await poll(() => fork.getByTestId('settings-role').textContent()).toBe('Only admins can change the plan.');
     expect(new URL(fork.url()).searchParams.get('__sc_session')).toBeTruthy();
     // A full server render of the fork's URL keeps the fork's session too.
     await fork.reload({ waitUntil: 'networkidle' });

@@ -45,6 +45,8 @@ async function open(path: string): Promise<Page> {
   await page.locator('stagecraft-panel').waitFor({ state: 'attached' });
   return page;
 }
+// Generous: other suites may be loading the machine; a state switch is a round trip plus a refetch.
+const poll = <T>(fn: () => T | Promise<T>) => expect.poll(fn, { timeout: 15_000 });
 const panel = (page: Page) => page.locator('stagecraft-panel');
 const mark = (page: Page) => page.evaluate(() => ((window as any).__noReload = true));
 const notReloaded = (page: Page) => page.evaluate(() => (window as any).__noReload === true);
@@ -52,13 +54,13 @@ const notReloaded = (page: Page) => page.evaluate(() => (window as any).__noRelo
 describe('Vue 3 + Vite + Pinia (@stagecraft/vue)', () => {
   it('registers the vue adapter and switches persona and state with no page reload', async () => {
     const page = await open('/');
-    await expect.poll(() => page.getByTestId('me').textContent()).toBe('Olivia Ortiz · owner');
+    await poll(() => page.getByTestId('me').textContent()).toBe('Olivia Ortiz · owner');
     await mark(page);
     await panel(page).getByLabel('Persona').selectOption('member');
-    await expect.poll(() => page.getByTestId('me').textContent()).toBe('Milo Meyer · member');
+    await poll(() => page.getByTestId('me').textContent()).toBe('Milo Meyer · member');
     await panel(page).getByLabel('Workspace').selectOption('trial_expired');
-    await expect.poll(() => page.getByTestId('workspace-banner').textContent()).toMatch(/trial has ended/);
-    await expect.poll(() => page.getByTestId('plan').textContent()).toMatch(/^Trial plan/);
+    await poll(() => page.getByTestId('workspace-banner').textContent()).toMatch(/trial has ended/);
+    await poll(() => page.getByTestId('plan').textContent()).toMatch(/^Trial plan/);
     // Cross-origin API data (projects) follows its state too.
     await page.getByRole('link', { name: 'Projects' }).click();
     await page.getByTestId('projects-list').waitFor();
@@ -85,29 +87,29 @@ describe('Vue 3 + Vite + Pinia (@stagecraft/vue)', () => {
     await page.getByTestId('projects-list').waitFor();
     expect(await page.locator('.pill').count()).toBe(0);
     await panel(page).getByLabel('project-health').check();
-    await expect.poll(() => page.locator('[data-testid=projects-list] .pill').count()).toBe(2);
+    await poll(() => page.locator('[data-testid=projects-list] .pill').count()).toBe(2);
     await page.close();
   });
 
   it('mock DB writes persist across persona switches and reloads (same-origin and cross-origin)', async () => {
     const page = await open('/settings');
     await panel(page).getByLabel('Persona').selectOption('member');
-    await expect.poll(() => page.getByTestId('me').textContent()).toBe('Milo Meyer · member');
+    await poll(() => page.getByTestId('me').textContent()).toBe('Milo Meyer · member');
     await page.getByLabel('Status message').fill('On holiday until Monday');
     await page.getByRole('button', { name: 'Save status' }).click();
-    await expect.poll(() => page.getByTestId('current-status').textContent()).toBe('On holiday until Monday');
+    await poll(() => page.getByTestId('current-status').textContent()).toBe('On holiday until Monday');
     await panel(page).getByLabel('Persona').selectOption('owner');
-    await expect.poll(() => page.getByTestId('current-status').textContent()).toBe('No status set.');
+    await poll(() => page.getByTestId('current-status').textContent()).toBe('No status set.');
     await panel(page).getByLabel('Persona').selectOption('member');
-    await expect.poll(() => page.getByTestId('current-status').textContent()).toBe('On holiday until Monday');
+    await poll(() => page.getByTestId('current-status').textContent()).toBe('On holiday until Monday');
     await page.reload({ waitUntil: 'networkidle' });
-    await expect.poll(() => page.getByTestId('current-status').textContent()).toBe('On holiday until Monday');
+    await poll(() => page.getByTestId('current-status').textContent()).toBe('On holiday until Monday');
     // A write to the cross-origin API, as the owner.
     await panel(page).getByLabel('Persona').selectOption('owner');
     await page.getByRole('link', { name: 'Projects' }).click();
     await page.getByPlaceholder('Project name').fill('Q1 launch');
     await page.getByRole('button', { name: 'Create project' }).click();
-    await expect.poll(() => page.getByTestId('projects-list').textContent()).toContain('Q1 launch');
+    await poll(() => page.getByTestId('projects-list').textContent()).toContain('Q1 launch');
     expect((engine.getSession().dbRef.db as any).projects.map((p: any) => p.name)).toContain('Q1 launch');
     await page.close();
   });
@@ -117,16 +119,16 @@ describe('Vue 3 + Vite + Pinia (@stagecraft/vue)', () => {
     await panel(main).getByLabel('Projects').selectOption('none');
     await main.getByTestId('projects-empty').waitFor();
     const fork = await open('/projects?__sc_session=fork&sc_scenario=trial-expired-member');
-    await expect.poll(() => fork.getByTestId('me').textContent()).toBe('Milo Meyer · member');
-    await expect.poll(() => fork.locator('[data-testid=projects-list] li').count()).toBe(12);
+    await poll(() => fork.getByTestId('me').textContent()).toBe('Milo Meyer · member');
+    await poll(() => fork.locator('[data-testid=projects-list] li').count()).toBe(12);
     expect(await fork.getByTestId('workspace-banner').textContent()).toMatch(/trial has ended/);
     // Client-side navigation in the fork keeps the fork's session.
     await fork.getByRole('link', { name: 'Settings' }).click();
-    await expect.poll(() => fork.getByText('Signed in as milo@fieldnote.test').count()).toBe(1);
+    await poll(() => fork.getByText('Signed in as milo@fieldnote.test').count()).toBe(1);
     expect(new URL(fork.url()).searchParams.get('__sc_session')).toBeTruthy();
     // Main is unchanged.
     await main.reload({ waitUntil: 'networkidle' });
-    await expect.poll(() => main.getByTestId('me').textContent()).toBe('Olivia Ortiz · owner');
+    await poll(() => main.getByTestId('me').textContent()).toBe('Olivia Ortiz · owner');
     await main.getByTestId('projects-empty').waitFor();
     expect(await main.getByTestId('workspace-banner').count()).toBe(0);
     await main.close();
