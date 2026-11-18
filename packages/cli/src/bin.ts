@@ -13,6 +13,7 @@ import { loadRepos, workspaceCommand } from './workspace.ts';
 import { checkCommand, describeCommand, matrixCommand } from './checks.ts';
 import { shareCommand } from './share.ts';
 import { hookCommand } from './hook.ts';
+import { discoverCommand } from './discover.ts';
 
 const HELP = `stagecraft — prototype in the real product on mock data
 
@@ -34,6 +35,9 @@ Usage:
   stagecraft matrix <route> [--viewports desktop,phone] [--cells cells.json]
                                   Grid of screenshots across states/personas/viewports
   stagecraft describe [--gate]    PR description: screens, states, scenarios, tapes, backend work, gate
+  stagecraft guide [--ds pkg]      Write stagecraft/component-guide.md (design system, props, stories, do/don't)
+  stagecraft discover [--write]   Propose product states from code (status unions, enums, flags, stories, empty/error branches)
+  stagecraft report [--json]      Setup report: stack, mocked/unmocked endpoints, API contract, what to fix next
   stagecraft share [path] [--expires 7d] [--password p] | share list | share revoke <id>
                                   Share link to a frozen copy of the current view (viewers: explore + comment)
   stagecraft mocks generate --openapi <spec> | --types <file.ts> --type Name:/path [--out D] [--seed N]
@@ -85,6 +89,10 @@ async function main() {
       return shareCommand(cwd, sub, rest, log);
     case 'hook':
       return hookCommand(cwd, sub, log);
+    case 'guide':
+    case 'discover':
+    case 'report':
+      return discoverCommand(cmd, cwd, args, log);
     case 'pr':
     case 'branch-from':
       return githubCommand(cwd, cmd, sub, rest, log);

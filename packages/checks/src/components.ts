@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { addedLines, changedFiles, CODE, pkgJson, read, result, type CheckResult, type Finding } from './util.ts';
@@ -46,7 +46,18 @@ function walk(dir: string, out: string[] = [], depth = 4): string[] {
 export function designSystem(root: string, hint: string[] = []): DesignSystemInfo {
   const pkg = pkgJson(root);
   const deps = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
-  const names = [...new Set([...hint, ...deps.filter((d) => /(design-system|^@[^/]+\/ui$|\/components$|-ui$)/.test(d))])];
+  // Libraries linked from other repos (stagecraft workspace link) are symlinks in node_modules.
+  const linked: string[] = [];
+  const nm = join(root, 'node_modules');
+  if (existsSync(nm)) {
+    for (const e of readdirSync(nm)) {
+      const p = join(nm, e);
+      if (e.startsWith('@')) {
+        for (const sub of readdirSync(p)) if (lstatSync(join(p, sub)).isSymbolicLink()) linked.push(`${e}/${sub}`);
+      } else if (!e.startsWith('.') && lstatSync(p).isSymbolicLink()) linked.push(e);
+    }
+  }
+  const names = [...new Set([...hint, ...linked, ...deps.filter((d) => /(design-system|^@[^/]+\/ui$|\/components$|-ui$)/.test(d))])];
   const req = createRequire(join(root, 'package.json'));
   const info: DesignSystemInfo = { packages: [], components: {}, deprecated: {}, tokenFiles: [] };
   for (const name of names) {

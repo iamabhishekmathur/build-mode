@@ -89,6 +89,8 @@ export function init(root: string, log: (m: string) => void) {
     writeFileSync(f, content);
     log(`  create ${rel}`);
   }
+  const started = join(root, 'stagecraft', '.setup-started');
+  if (!existsSync(started)) writeFileSync(started, new Date().toISOString() + '\n');
   for (const rel of sync(root)) log(`  sync   ${rel}`);
   for (const rel of writeMcpConfigs(root)) log(`  mcp    ${rel}`);
   const gi = join(root, '.gitignore');

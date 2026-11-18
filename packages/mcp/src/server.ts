@@ -93,6 +93,25 @@ export async function createMcpServer(opts: McpOptions = {}) {
     },
   );
 
+  tool('components_guide', 'Which design-system component to use for which job: imports, props, usage counts, Storybook stories, do/don\'t (FR-305). Read it before building UI.', {}, async () => {
+    const mod = 'stagecraft';
+    const { componentGuide } = await import(mod);
+    return componentGuide(needRoot()).markdown;
+  });
+
+  tool('states_discover', 'Propose product states found in code: status/role unions, enums, flag keys, Storybook stories, empty/error/loading branches (FR-109). Shows which are already in the catalog.', {}, async () => {
+    const mod = 'stagecraft';
+    const { discoverStates } = await import(mod);
+    const cat = await call('GET', '/catalog').catch(() => ({ states: {} }));
+    return discoverStates(needRoot(), cat.states);
+  });
+
+  tool('setup_report', 'Setup report (FR-105): stack, mocked and unmocked endpoints, API contract coverage, what works, and what to fix next with a next action for each.', {}, async () => {
+    const mod = 'stagecraft';
+    const { setupReport } = await import(mod);
+    return (await setupReport(needRoot())).markdown;
+  });
+
   tool('setup_detect', 'Detect the repo stack (framework, package manager, dev command, router, API style, flags, design system, Storybook).', {}, async () => {
     if (!root) throw new Error('No stagecraft.config.ts found. Run "npx --no stagecraft init" first.');
     return detect(root);
