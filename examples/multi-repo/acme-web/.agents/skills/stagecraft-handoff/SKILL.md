@@ -7,9 +7,9 @@ description: Prepare a prototype for an engineer: clean variants, check for mock
 
 1. **Variants:** ask the user which option won for each variant (`variant_list`). Replace each `<Variant>` / `useVariant` with the winning code only. No `@stagecraft/react` variant calls may remain for those regions.
 2. **Mock leakage:** product code must not import from `stagecraft/`. Run `npx --no stagecraft doctor`; it fails on leaks.
-3. **Checks:** run the build, type check, lint and existing tests. All must pass.
+3. **Checks:** run `check_handoff` (build, types, lint, tests, no mock code, no variants left, components clean). All must pass, or explain why in the PR.
 4. **Design system:** no new component that duplicates an existing one; no hard-coded colors or spacing. Explain any exception.
-5. **PR description** with these sections:
+5. **PR description:** `pr_describe` writes it (run with `runGate: true`). Check and edit it. It has these sections:
    - Summary (what and why)
    - Screens changed (with screenshots from `preview_screenshot`)
    - States covered (list scenarios in `stagecraft/scenarios/`)

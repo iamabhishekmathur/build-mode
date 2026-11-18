@@ -271,7 +271,8 @@ export function mountPanel(rt: StagecraftRuntime, defaults: any) {
         <button class="icon" data-k="hide" aria-label="Hide panel (Alt+Shift+S to show)">✕</button></header>
       ${commentsSection()}
       <section aria-labelledby="h-who"><h2 id="h-who">Who</h2>
-        <div class="row"><label for="persona">Persona</label><select id="persona" data-k="persona">${personaOpts}</select></div></section>
+        <div class="row"><label for="persona">Persona</label><select id="persona" data-k="persona">${personaOpts}</select></div>
+        <div class="row"><label for="clock">Time</label><input type="datetime-local" id="clock" data-k="clock" value="${st.clock ? esc(st.clock.slice(0, 16)) : ''}" style="flex:1;min-width:0;font:inherit;color:var(--fg);background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:3px 4px">${st.clock ? '<button class="icon" data-k="clock-clear" aria-label="Use real time">✕</button>' : ''}</div></section>
       ${stateRows ? `<section aria-labelledby="h-states"><h2 id="h-states">States</h2>${stateRows}</section>` : ''}
       ${flagRows ? `<section aria-labelledby="h-flags"><h2 id="h-flags">Flags</h2>${flagRows}</section>` : ''}
       ${variantRows ? `<section aria-labelledby="h-var"><h2 id="h-var">Variants</h2>${variantRows}</section>` : ''}
@@ -356,6 +357,8 @@ export function mountPanel(rt: StagecraftRuntime, defaults: any) {
     });
     on('hide', 'click', () => setMode('hidden'));
     on('persona', 'change', (el) => run('Persona changed', () => rt.set({ persona: el.value })));
+    on('clock', 'change', (el) => el.dataset.k === 'clock' && el.value && run('Time set', () => rt.set({ clock: new Date(el.value + 'Z').toISOString() })));
+    on('clock-clear', 'click', () => run('Real time', () => rt.set({ clock: null })));
     on('state:', 'change', (el) => run('State changed', () => rt.set({ states: { [el.dataset.k.slice(6)]: el.value } })));
     on('flag:', 'change', (el) => {
       const k = el.dataset.k.slice(5);

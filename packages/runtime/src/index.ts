@@ -146,6 +146,30 @@ import { mountPanel } from './panel.ts';
     };
   }
 
+  // ---------- scenario clock: Date starts at state.clock and runs forward ----------
+  const RealDate = Date;
+  let clockOffset = 0;
+  let clockFor: string | undefined;
+  let clockInstalled = false;
+  function applyClock() {
+    const c = info.state.clock;
+    if (c === clockFor) return;
+    clockFor = c;
+    clockOffset = c ? Date.parse(c) - RealDate.now() : 0;
+    if (!c || clockInstalled) return;
+    clockInstalled = true;
+    const Fake = function (this: any, ...args: any[]) {
+      if (!(this instanceof Fake)) return new RealDate(RealDate.now() + clockOffset).toString();
+      return args.length ? new (RealDate as any)(...args) : new RealDate(RealDate.now() + clockOffset);
+    } as any;
+    Fake.prototype = RealDate.prototype;
+    Fake.now = () => RealDate.now() + clockOffset;
+    Fake.parse = RealDate.parse;
+    Fake.UTC = RealDate.UTC;
+    (window as any).Date = Fake;
+  }
+  applyClock();
+
   // ---------- events from the proxy ----------
   function connect() {
     const es = new OrigES(withSid(`/__stagecraft/api/events`));
@@ -158,6 +182,7 @@ import { mountPanel } from './panel.ts';
       if (e.type === 'state') {
         const prevData = info.dataVersion;
         info = { ...info, state: e.state, flags: e.flags, dataVersion: e.dataVersion, uiVersion: e.uiVersion };
+        applyClock();
         syncUrl();
         if (e.reason === 'data' && e.dataVersion !== prevData) {
           if (adapter) emit('data', info);

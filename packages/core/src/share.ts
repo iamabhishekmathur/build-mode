@@ -8,6 +8,8 @@ export interface ShareState {
   v?: Record<string, string>;
   x?: FaultRule[];
   t?: 'light' | 'dark';
+  /** clock */
+  c?: string;
 }
 
 function b64urlEncode(str: string): string {
@@ -33,6 +35,7 @@ export function encodeShareState(state: SessionState, defaults: { persona: strin
   if (Object.keys(state.variants).length) out.v = state.variants;
   if (state.faults.length) out.x = state.faults;
   if (state.theme) out.t = state.theme;
+  if (state.clock) out.c = state.clock;
   return Object.keys(out).length ? b64urlEncode(JSON.stringify(out)) : '';
 }
 

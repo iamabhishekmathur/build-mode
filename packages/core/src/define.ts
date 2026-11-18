@@ -13,6 +13,8 @@ export interface MockContext<DB = any> {
   persona: PersonaDef & { id: string };
   flags: Record<string, Json>;
   states: Record<string, string>;
+  /** "Now" for this session: the scenario clock if set, else the real time. Use it instead of new Date(). */
+  now: Date;
   /** Build a response with a status code. */
   reply: (status: number, body?: unknown, headers?: Record<string, string>) => MockReply;
 }

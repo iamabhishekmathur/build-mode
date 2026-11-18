@@ -3,6 +3,8 @@ import { join } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { validateTape } from '@stagecraft/core';
+import { checkA11y, checkComponents, checkFast, checkHandoff, checkVisual, describePr, renderMatrix, VIEWPORTS } from '@stagecraft/checks';
+import { readFileSync as readFileSyncFs } from 'node:fs';
 import { detect, findConfig, loadConfig, resolveWorkspace, settle, workspaceStatus } from '@stagecraft/server';
 
 /**
@@ -126,6 +128,77 @@ export async function createMcpServer(opts: McpOptions = {}) {
       return { content };
     },
   );
+
+  const needRoot = () => {
+    if (!root) throw new Error('No stagecraft.config.ts found.');
+    return root;
+  };
+  const cellShape = z
+    .array(
+      z.object({
+        label: z.string().optional(),
+        persona: z.string().optional(),
+        states: z.record(z.string()).optional(),
+        scenario: z.string().optional(),
+        flags: z.record(z.any()).optional(),
+        variants: z.record(z.string()).optional(),
+        viewport: z.union([z.enum(['desktop', 'tablet', 'phone']), z.object({ width: z.number(), height: z.number() })]).optional(),
+        theme: z.enum(['light', 'dark']).optional(),
+      }),
+    )
+    .optional()
+    .describe('State matrix cells. Default: current state on desktop and phone.');
+  const cellsOf = (cells?: any[]) => cells?.map((c) => ({ ...c, viewport: typeof c.viewport === 'string' ? (VIEWPORTS as any)[c.viewport] : c.viewport }));
+  const png = (file: string): Content => ({ type: 'image', data: readFileSyncFs(file).toString('base64'), mimeType: 'image/png' });
+
+  tool('check_fast', 'Type check + lint on changed files (FR-1003). Run after each edit.', {}, async () => checkFast(needRoot()));
+
+  tool(
+    'check_components',
+    'Design-system hygiene on changed lines (FR-1005): hard-coded colors/spacing, new components that duplicate design-system ones, deprecated imports. Silence one line with a "stagecraft-allow: <reason>" comment.',
+    {},
+    async () => checkComponents(needRoot()),
+  );
+
+  tool(
+    'check_visual',
+    'Visual self-check (FR-1001): screenshots routes across a state matrix (deterministic: fixed clock, seeded random) and detects page overflow, cut-off text, overlapping controls, broken images, "undefined"/"NaN" shown, empty pages, low contrast and runtime errors. Returns findings and the screenshots: look at them yourself too.',
+    { routes: z.array(z.string()).default(['/']), cells: cellShape, maxImages: z.number().default(6) },
+    async (a) => {
+      const r = await checkVisual({ base: baseUrl, root: needRoot(), routes: a.routes, cells: cellsOf(a.cells) });
+      const content: Content[] = [{ type: 'text', text: JSON.stringify({ pass: r.pass, findings: r.findings, ms: r.ms, cells: r.cells.map((c) => ({ route: c.route, label: c.label, url: c.url })) }, null, 2) }];
+      for (const c of r.cells.slice(0, a.maxImages)) content.push({ type: 'text', text: `${c.route} @ ${c.label}` }, png(c.screenshot));
+      return { content };
+    },
+  );
+
+  tool('check_a11y', 'Accessibility scan with axe-core, WCAG 2.2 A/AA (FR-1004). Returns violations with selectors.', { routes: z.array(z.string()).default(['/']), cells: cellShape }, async (a) =>
+    checkA11y({ base: baseUrl, root: needRoot(), routes: a.routes, cells: cellsOf(a.cells) }),
+  );
+
+  tool(
+    'matrix_render',
+    'Render one route across a matrix of states × personas × viewports as a grid of screenshots (FR-407). Returns the grid URL (each cell links to its live state) and the images.',
+    { route: z.string().default('/'), cells: cellShape, maxImages: z.number().default(8) },
+    async (a) => {
+      const m = await renderMatrix({ base: baseUrl, root: needRoot(), routes: [], route: a.route, cells: cellsOf(a.cells) });
+      const content: Content[] = [{ type: 'text', text: JSON.stringify({ grid: `${baseUrl}/__stagecraft/checks/${m.dir.split('/').pop()}/index.html`, ms: m.ms, cells: m.cells.map((c) => ({ label: c.label, url: c.url })) }, null, 2) }];
+      for (const c of m.cells.slice(0, a.maxImages)) content.push({ type: 'text', text: c.label }, png(c.screenshot));
+      return { content };
+    },
+  );
+
+  tool(
+    'check_handoff',
+    'Handoff gate (FR-1106): build, types, lint, tests, no mock code in product code, no variants left, components clean or explained. Run before "ready for engineering".',
+    { skipBuild: z.boolean().optional(), skipTests: z.boolean().optional() },
+    async (a) => checkHandoff(needRoot(), { skipBuild: a.skipBuild, skipTests: a.skipTests }),
+  );
+
+  tool('pr_describe', 'Write the PR description (FR-1107): summary, screens, states, scenarios, tapes, Figma links, backend work needed, known gaps, gate result.', { runGate: z.boolean().optional() }, async (a) => {
+    const r = needRoot();
+    return describePr(r, { gate: a.runGate ? await checkHandoff(r, { skipBuild: true }) : undefined });
+  });
 
   tool('session_get', 'Current persona, states, flags, variants, faults, scenario and tape for a session, plus a shareable link.', { session }, (a) => call('GET', '/session', undefined, a.session));
 

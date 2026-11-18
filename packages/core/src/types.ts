@@ -76,6 +76,8 @@ export interface SessionState {
   faults: FaultRule[];
   scenario?: string;
   tape?: TapeRef;
+  /** Fixed "now" for the app and the mocks (ISO time). Time runs forward from it. */
+  clock?: string;
   viewport?: { width: number; height: number };
   theme?: 'light' | 'dark';
   locale?: string;
@@ -93,6 +95,8 @@ export interface Scenario {
   variants?: Record<string, string>;
   faults?: FaultRule[];
   url?: string;
+  /** Fixed "now" (ISO), so dates in the scenario never go stale. */
+  clock?: string;
   viewport?: { width: number; height: number };
   theme?: 'light' | 'dark';
   locale?: string;

@@ -49,6 +49,8 @@ export interface PatchInput {
   theme?: 'light' | 'dark';
   locale?: string;
   viewport?: { width: number; height: number };
+  /** ISO time, or null for real time. */
+  clock?: string | null;
 }
 
 export class UserError extends Error {
@@ -239,6 +241,12 @@ export class Engine {
       s.state.faults = input.faults;
       data = true;
     }
+    if (input.clock !== undefined && (input.clock ?? undefined) !== s.state.clock) {
+      if (input.clock !== null && Number.isNaN(Date.parse(input.clock))) throw new UserError(`clock must be an ISO date-time, got "${input.clock}"`);
+      if (input.clock === null) delete s.state.clock;
+      else s.state.clock = new Date(input.clock).toISOString();
+      data = true;
+    }
     for (const k of ['theme', 'locale', 'viewport'] as const) {
       if (input[k] !== undefined) {
         (s.state as any)[k] = input[k];
@@ -311,6 +319,7 @@ export class Engine {
     state.theme = r.theme;
     state.locale = r.locale;
     state.viewport = r.viewport;
+    if (r.clock) state.clock = new Date(r.clock).toISOString();
     state.scenario = r.name;
     s.state = state;
     try {
@@ -342,6 +351,7 @@ export class Engine {
       ...(input.url ? { url: input.url } : {}),
       ...(s.state.viewport ? { viewport: s.state.viewport } : {}),
       ...(s.state.theme ? { theme: s.state.theme } : {}),
+      ...(s.state.clock ? { clock: s.state.clock } : {}),
       ...(input.includeDb !== false ? { dbSnapshot: s.dbRef.db } : {}),
     };
     const file = writeJson(this.scenariosDir, input.name, sc);

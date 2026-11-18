@@ -3,11 +3,16 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Stagecraft CLI: init, detect, dev, doctor, agents sync, scenario, tape, mcp.",
-  "bin": { "stagecraft": "./src/bin.ts" },
-  "exports": { ".": "./src/index.ts" },
+  "bin": {
+    "stagecraft": "./src/bin.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "dependencies": {
     "@stagecraft/core": "0.1.0",
     "@stagecraft/server": "0.1.0",
-    "@stagecraft/mcp": "0.1.0"
+    "@stagecraft/mcp": "0.1.0",
+    "@stagecraft/checks": "0.1.0"
   }
 }

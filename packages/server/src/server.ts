@@ -13,6 +13,15 @@ import { resolveWorkspace } from './workspace.ts';
 import { FeedbackStore, type Actor } from './feedback.ts';
 
 const feedbackStores = new WeakMap<Engine, FeedbackStore>();
+/** When each session's clock was set, so scenario time runs forward like real time. */
+const clockSetAt = new WeakMap<Session, { clock: string; at: number }>();
+function clockStart(s: Session): number {
+  const cur = clockSetAt.get(s);
+  if (cur && cur.clock === s.state.clock) return cur.at;
+  const at = Date.now();
+  clockSetAt.set(s, { clock: s.state.clock!, at });
+  return at;
+}
 /** One feedback store per engine (shared by port-mounted app servers). */
 export function feedbackFor(engine: Engine): FeedbackStore {
   let f = feedbackStores.get(engine);
@@ -188,6 +197,15 @@ export class StagecraftServer {
       return res.end(this.runtimeJs);
     }
     if (path === '/__stagecraft/health') return sendJson(res, 200, { ok: true, devUrl: this.devUrl.href, apiOrigins: this.engine.config.apiOrigins });
+    if (path.startsWith('/__stagecraft/checks/')) {
+      // Check artifacts (matrix pages, screenshots) from .stagecraft-cache/checks.
+      const rel = decodeURIComponent(path.slice('/__stagecraft/checks/'.length));
+      const base = `${this.engine.root}/.stagecraft-cache/checks/`;
+      const file = `${base}${rel}`;
+      if (rel.includes('..') || !existsSync(file)) return sendJson(res, 404, { error: 'No such check artifact' });
+      res.writeHead(200, { 'content-type': file.endsWith('.html') ? 'text/html; charset=utf-8' : file.endsWith('.png') ? 'image/png' : 'application/json', 'cache-control': 'no-store' });
+      return res.end(readFileSync(file));
+    }
     if (path === '/__stagecraft/compare') {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       return res.end(comparePage(url));
@@ -254,6 +272,7 @@ export class StagecraftServer {
       persona: { ...persona, id: s.state.persona },
       flags: engine.effectiveFlags(s),
       states: s.state.states,
+      now: s.state.clock ? new Date(Date.parse(s.state.clock) + (Date.now() - clockStart(s))) : new Date(),
       reply: (status: number, b?: unknown, headers?: Record<string, string>): MockReply => ({ __stagecraftReply: true, status, body: b, headers }),
     };
     let out: unknown;
@@ -365,7 +384,7 @@ export class StagecraftServer {
     const variants: Record<string, string | null> = {};
     for (const k of e.variantsSeen.keys()) variants[k] = null;
     Object.assign(variants, sh.v ?? {});
-    return { persona: sh.p ?? d.persona, states: { ...d.states, ...(sh.s ?? {}) }, flags, variants, faults: sh.x ?? [], theme: sh.t };
+    return { persona: sh.p ?? d.persona, states: { ...d.states, ...(sh.s ?? {}) }, flags, variants, faults: sh.x ?? [], theme: sh.t, clock: sh.c ?? null };
   }
 
   shareParam(s: SessionState) {

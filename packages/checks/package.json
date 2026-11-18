@@ -1,0 +1,8 @@
+{
+  "name": "@stagecraft/checks",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Checks the agent runs on its own work: fast (types, lint), components, a11y, visual, handoff gate; PR description.",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@stagecraft/core": "0.1.0", "@stagecraft/server": "0.1.0", "axe-core": "^4.10.0" }
+}

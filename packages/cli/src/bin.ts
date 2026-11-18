@@ -8,6 +8,7 @@ import { doctor } from './doctor.ts';
 import { dev } from './dev.ts';
 import { init } from './init.ts';
 import { loadRepos, workspaceCommand } from './workspace.ts';
+import { checkCommand, describeCommand, matrixCommand } from './checks.ts';
 
 const HELP = `stagecraft — prototype in the real product on mock data
 
@@ -24,6 +25,11 @@ Usage:
   stagecraft workspace status|clone|link|unlink|branch <name>
                                   Multi-repo products: repo status, clone missing repos, dev-link
                                   library packages, one prototype branch across repos
+  stagecraft check fast|components|a11y|visual|handoff
+                                  Checks on your own work (see --help of each); exit 1 on errors
+  stagecraft matrix <route> [--viewports desktop,phone] [--cells cells.json]
+                                  Grid of screenshots across states/personas/viewports
+  stagecraft describe [--gate]    PR description: screens, states, scenarios, tapes, backend work, gate
   stagecraft mcp                  Run the MCP server on stdio (used by Claude Code, Codex, Cursor)
 `;
 
@@ -61,6 +67,12 @@ async function main() {
     }
     case 'workspace':
       return workspaceCommand(cwd, sub, rest, log);
+    case 'check':
+      return checkCommand(cwd, sub, rest, log);
+    case 'matrix':
+      return matrixCommand(cwd, sub, rest, log);
+    case 'describe':
+      return describeCommand(cwd, args, log);
     case 'agents': {
       const { root, repos } = await loadRepos(cwd);
       if (sub === 'sync') {
