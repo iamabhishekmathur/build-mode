@@ -1,0 +1,142 @@
+{
+  "taskId": "T-SET-02",
+  "title": "Set up a Next.js App Router app from scratch (Acme Billing)",
+  "category": "setup",
+  "pass": true,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /settings",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "server-rendered data comes from mocks",
+      "pass": true,
+      "detail": "Acme Billing\nInvoices\nSettings\nPriya Raman · owner\nNorthwind Studio\n\nGrowth plan · 12 seats\n\nInvoices\nBluebird Coffee\t2026-12-01\topen\t$1,840.00\tMark paid\nHarbor"
+    },
+    {
+      "id": "viewer persona shows in the UI",
+      "pass": true,
+      "detail": "persona viewer: Acme Billing\nInvoices\nSettings\nTom Becker · viewer\nSettings\n\nOnly the account owner can change billing."
+    },
+    {
+      "id": "past-due state changes the UI",
+      "pass": true,
+      "detail": "account=past_due: Acme Billing\nInvoices\nSettings\nPriya Raman · owner\nNorthwind Studio\n\nGrowth plan · 12 seats\n\nYour payment method failed. Update it to keep s"
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 37,
+    "costUsd": 0.7230909999999999,
+    "durationMs": 81477,
+    "toolCalls": 35,
+    "toolsUsed": {
+      "Skill": 1,
+      "Bash": 8,
+      "Glob": 1,
+      "Read": 2,
+      "Write": 3,
+      "Edit": 1,
+      "ToolSearch": 1,
+      "mcp__stagecraft__state_catalog": 1,
+      "mcp__stagecraft__preview_screenshot": 8,
+      "mcp__stagecraft__mock_endpoints": 1,
+      "mcp__stagecraft__scenario_save": 3,
+      "mcp__stagecraft__persona_set": 2,
+      "mcp__stagecraft__state_set": 3
+    },
+    "skillsUsed": [
+      "stagecraft-setup"
+    ],
+    "screenshots": 8,
+    "permissionDenials": [
+      "Bash: {\"command\":\"for f in app/*.tsx app/settings/page.tsx app/globals.css lib/api.ts package.json next.config.mjs .env.stagecraft .gitignore stagecraft/agents.md; do",
+      "Bash: {\"command\":\"P=$(node -p \\\"require('path').dirname(require.resolve('@stagecraft/core/package.json'))\\\"); echo $P; ls $P $P/src 2>/dev/null; grep -rn \\\"defineStat",
+      "Bash: {\"command\":\"node -p \\\"require('path').dirname(require.resolve('@stagecraft/core/package.json'))\\\"\",\"description\":\"Locate @stagecraft/core package\"}"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "I finished the setup, and it works. The Invoices and Settings pages now load fake data for an account owner and a read-only viewer, and you can switch the account to past-due. I checked each of these in screenshots.\n\n**What was wrong:** Stagecraft's starter setup was faking the wrong addresses. The app gets its data from `https://api.acme-billing.example/v1/...`, but the fake data was answering `/api/...`. The starter roles were also \"admin\" and \"member\", while the app only knows \"owner\" and \"viewer\". Stagecraft's own health check passed anyway, because it doesn't catch this kind of mismatch.\n\n**What I set up:**\n- **Fake company \"Northwind Studio\"** on the Growth plan with 12 seats, and six invoices: two open, one overdue, three paid.\n- **Two people to switch between:**\n  - **Account owner (Priya):** sees a \"Mark paid\" button on unpaid invoices, and Settings says she can change billing.\n  - **Read-only viewer (Tom):** sees the same invoices with no buttons, and Settings says only the owner can change billing.\n- **\"Mark paid\" really works:** the invoice changes to paid. The fake server also refuses it for a viewer or a suspended account.\n- **Account states you can switch between:**\n  - **Past due:** a yellow \"Your payment method failed\" banner appears, and a second invoice becomes overdue.\n  - **Suspended:** a red banner appears, and the \"Mark paid\" buttons disappear.\n  - **No invoices:** shows the empty message.\n- **Three saved setups** you can open in one click: `owner-active`, `viewer-read-only` and `past-due-owner`.\n\n**What I checked:** No request from the app goes to a real server. I took screenshots of both pages for the owner, the viewer and the past-due account, plus the suspended and no-invoices states. I also clicked \"Mark paid\" to confirm the invoice updates. Everything showed what it should.\n\n**How to use it:** Open http://127.0.0.1:4400 (not port 3100). The Stagecraft panel there lets you switch between the owner and the viewer, change the account state, or load a saved setup. I left it on the owner with an active account.\n\nTwo things you might notice:\n- **Settings page:** it's very thin. It only shows one line about who can change billing. If you want to try a real billing settings screen, that's something we'd build next.\n- **Small round \"N\" button:** it appears bottom-left of the page, sometimes over the content, and comes from the development tools. Your customers won't see it.\n\nNothing is committed yet. The changes are in `stagecraft.config.ts` and the `stagecraft/` folder.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-next-app": [
+      "AGENTS.md",
+      ".agents/skills/stagecraft-add-state/SKILL.md",
+      ".agents/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".agents/skills/stagecraft-build-screen/SKILL.md",
+      ".agents/skills/stagecraft-create-variant/SKILL.md",
+      ".agents/skills/stagecraft-handoff/SKILL.md",
+      ".agents/skills/stagecraft-make-tape/SKILL.md",
+      ".agents/skills/stagecraft-self-check/SKILL.md",
+      ".agents/skills/stagecraft-setup/SKILL.md",
+      ".claude/settings.json",
+      ".claude/skills/stagecraft-add-state/SKILL.md",
+      ".claude/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".claude/skills/stagecraft-build-screen/SKILL.md",
+      ".claude/skills/stagecraft-create-variant/SKILL.md",
+      ".claude/skills/stagecraft-handoff/SKILL.md",
+      ".claude/skills/stagecraft-make-tape/SKILL.md",
+      ".claude/skills/stagecraft-self-check/SKILL.md",
+      ".claude/skills/stagecraft-setup/SKILL.md",
+      ".codex/config.toml",
+      ".cursor/mcp.json",
+      ".cursor/rules/stagecraft.mdc",
+      ".cursor/skills/stagecraft-add-state/SKILL.md",
+      ".cursor/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".cursor/skills/stagecraft-build-screen/SKILL.md",
+      ".cursor/skills/stagecraft-create-variant/SKILL.md",
+      ".cursor/skills/stagecraft-handoff/SKILL.md",
+      ".cursor/skills/stagecraft-make-tape/SKILL.md",
+      ".cursor/skills/stagecraft-self-check/SKILL.md",
+      ".cursor/skills/stagecraft-setup/SKILL.md",
+      ".env.stagecraft",
+      ".mcp.json",
+      "CLAUDE.md",
+      "stagecraft.config.ts",
+      "stagecraft.detect.json",
+      "stagecraft/agents.md",
+      "stagecraft/mocks.ts",
+      "stagecraft/scenarios/.gitkeep",
+      "stagecraft/scenarios/owner-active.json",
+      "stagecraft/scenarios/past-due-owner.json",
+      "stagecraft/scenarios/viewer-read-only.json",
+      "stagecraft/seed.ts",
+      "stagecraft/skills/add-state/SKILL.md",
+      "stagecraft/skills/apply-figma-frame/SKILL.md",
+      "stagecraft/skills/build-screen/SKILL.md",
+      "stagecraft/skills/create-variant/SKILL.md",
+      "stagecraft/skills/handoff/SKILL.md",
+      "stagecraft/skills/make-tape/SKILL.md",
+      "stagecraft/skills/self-check/SKILL.md",
+      "stagecraft/skills/setup/SKILL.md",
+      "stagecraft/states.ts",
+      "stagecraft/tapes/.gitkeep"
+    ]
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-02/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-02/_settings.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-02/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-02/_settings.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-02/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-SET-02-mwlsg7l4",
+  "startedAt": "2026-11-18T07:17:00.136Z"
+}

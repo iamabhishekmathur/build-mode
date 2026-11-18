@@ -126,3 +126,15 @@ describe('CLI binary', () => {
     expect(execFileSync('node', [BIN, 'help'], { encoding: 'utf8' })).toContain('stagecraft init');
   });
 });
+
+describe('init placeholders', () => {
+  it('doctor warns while template placeholders remain', async () => {
+    const fx = fixture('ph');
+    const root = join(fx.root, 'fresh');
+    mkdirSync(root);
+    writeFileSync(join(root, 'package.json'), JSON.stringify({ scripts: { dev: 'vite' }, dependencies: { react: '^19.0.0' } }));
+    init(root, () => {});
+    const r = await doctor(root);
+    expect(r.warnings.join('\n')).toMatch(/Template placeholders are still in the config: persona "admin", persona "member", state account.active/);
+  });
+});

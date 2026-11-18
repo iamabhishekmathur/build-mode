@@ -1,0 +1,109 @@
+{
+  "taskId": "T-MULTI-01",
+  "title": "Change the design-system repo and use it in the app (4 repos)",
+  "category": "multi-repo",
+  "pass": true,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /admin/",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "Pill added to the library repo",
+      "pass": true
+    },
+    {
+      "id": "app imports Pill from @acme/ui (no local copy)",
+      "pass": true,
+      "detail": "imports=true localCopy=false"
+    },
+    {
+      "id": "categories rendered on the dashboard",
+      "pass": true,
+      "detail": "Larkspur Coffee Active\nCora Customer · owner\nPayments\nBean Brokers: $820\nSupplies\nMill & Co: $145\nEquipment\nBrightline Electric: $312\nUtilities\nPaper Trail Packaging: $96\nSupplies\nSteamworks Repair: $"
+    },
+    {
+      "id": "API repo untouched",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "changed repos share one branch",
+      "pass": true,
+      "detail": "acme-web@proto/pill-payment-category, acme-ui@proto/pill-payment-category"
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 62,
+    "costUsd": 1.0148788,
+    "durationMs": 153820,
+    "toolCalls": 60,
+    "toolsUsed": {
+      "Skill": 1,
+      "Bash": 8,
+      "ToolSearch": 1,
+      "mcp__stagecraft__state_catalog": 1,
+      "Glob": 6,
+      "Read": 12,
+      "Edit": 13,
+      "mcp__stagecraft__mockdb_reset": 1,
+      "mcp__stagecraft__preview_screenshot": 7,
+      "mcp__stagecraft__fault_set": 2,
+      "mcp__stagecraft__state_set": 2,
+      "mcp__stagecraft__mock_endpoints": 1,
+      "mcp__stagecraft__scenario_save": 1,
+      "mcp__stagecraft__workspace_status": 1,
+      "Write": 3
+    },
+    "skillsUsed": [
+      "stagecraft-build-screen"
+    ],
+    "screenshots": 7,
+    "permissionDenials": [
+      "Bash: {\"command\":\"cd .. && ls; for r in acme-web acme-ui acme-admin acme-api; do echo \\\"== $r\\\"; (cd $r && git status -sb | head -3 && git ls-files | grep -v node_mod",
+      "Bash: {\"command\":\"cd /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlslt4l && ls && for r in acme-web acme-ui acme-admin acme-api; do echo \\\"== $r\\\"; git -C $r s",
+      "Bash: {\"command\":\"cd /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlslt4l; ls; git -C acme-web status -sb; git -C acme-ui status -sb; git -C acme-web ls-files; ",
+      "Bash: {\"command\":\"ls -la /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlslt4l/ /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlslt4l/acme-ui /home/user/bui",
+      "Bash: {\"command\":\"cat package.json; ls; npx --no tsc --noEmit -p . 2>&1 | tail -20\",\"description\":\"Show scripts and run type check\"}",
+      "Bash: {\"command\":\"npx --no tsc --version 2>&1\",\"description\":\"Check TypeScript is available\"}"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "I added the Pill component to the design system and the dashboard now shows each payment's category with it. Everything is on a branch called `proto/pill-payment-category` and nothing is committed or pushed yet. I checked the dashboard in screenshots in every state below. This repo has no build, type-check, lint or test scripts, so those didn't run. The only automated check was Stagecraft's own check, and it passed.\n\n**The Pill component (design-system repo, `acme-ui`)**\n- `<Pill>Supplies</Pill>` is a small rounded label. It has an optional `tone`: neutral (the default), brand, ok, warn or bad.\n- It uses only the existing design colors and spacing, and has the same shape as the existing status badge (Active / Frozen), so they look like a set.\n- It's exported from the package, so other teams can import it like any other component.\n\n**Dashboard (`acme-web`)**\n- Each payment shows a grey Pill with its category. I added four more fake payments, so the list covers Supplies, Equipment, Utilities, Maintenance and Rent.\n- A payment with no category simply shows no pill.\n- **I fixed a bug that was already there:** if payments failed to load, the whole page went blank. The payments card now shows a loading message, a \"No payments yet.\" message and an error message instead.\n- In the Stagecraft panel you can now switch between \"With payments\", \"No payments\" and \"No categories\". There's also a new saved scenario called `payment-categories`.\n- Mock screenshots no longer show up as changed files, so they won't end up in the PR.\n\n**For engineering**\n- **Backend work is needed:** the real payments API has no category field yet. The dashboard handles that by showing no pill, but someone has to add the field. They also need to decide whether categories are free text or a fixed list. I couldn't record this in the API repo because that repo is read-only.\n- I drafted one PR description per changed repo. The design-system PR merges first and the dashboard PR depends on it:\n  - `/tmp/claude-0/-home-user-build-mode-tests--tmp-evals-T-MULTI-01-mwlslt4l-acme-web/119a5a19-8a29-42ee-920b-6de43e613b1c/scratchpad/PR-acme-ui.md`\n  - `/tmp/claude-0/-home-user-build-mode-tests--tmp-evals-T-MULTI-01-mwlslt4l-acme-web/119a5a19-8a29-42ee-920b-6de43e613b1c/scratchpad/PR-acme-web.md`\n\nShould I commit, push and open the two draft PRs linked to each other? Merging them is left to a person.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "acme-web": [
+      "src/main.tsx",
+      "stagecraft/seed.ts",
+      "stagecraft/states.ts",
+      ".gitignore",
+      "stagecraft/scenarios/payment-categories.json"
+    ],
+    "acme-ui": [
+      "src/index.tsx"
+    ],
+    "acme-admin": [],
+    "acme-api": []
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-MULTI-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-MULTI-01/_admin_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-MULTI-01/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlslt4l",
+  "startedAt": "2026-11-18T07:21:21.333Z"
+}

@@ -66,6 +66,12 @@ export async function doctor(cwd: string): Promise<DoctorReport> {
     r.errors.push(`State patch fails on the seed: ${(e as Error).message}`);
   }
 
+  const placeholders = [
+    ...Object.entries(engine.config.personas).filter(([, p]) => /\(placeholder\)/i.test(p.label)).map(([k]) => `persona "${k}"`),
+    ...Object.entries(engine.config.states ?? {}).flatMap(([e, d]) => Object.entries(d.states).filter(([, st]) => /\(placeholder\)/i.test(st.label ?? '')).map(([k]) => `state ${e}.${k}`)),
+  ];
+  if (placeholders.length) r.warnings.push(`Template placeholders are still in the config: ${placeholders.join(', ')}. Replace them with the product's real roles and states (seed data and mocks too).`);
+
   for (const sc of Object.values(engine.scenarios)) {
     try {
       const res = resolveScenario(sc.name, engine.scenarios);

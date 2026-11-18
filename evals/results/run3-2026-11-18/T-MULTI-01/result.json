@@ -1,0 +1,107 @@
+{
+  "taskId": "T-MULTI-01",
+  "title": "Change the design-system repo and use it in the app (4 repos)",
+  "category": "multi-repo",
+  "pass": true,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /admin/",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "Pill added to the library repo",
+      "pass": true
+    },
+    {
+      "id": "app imports Pill from @acme/ui (no local copy)",
+      "pass": true,
+      "detail": "imports=true localCopy=false"
+    },
+    {
+      "id": "categories rendered on the dashboard",
+      "pass": true,
+      "detail": "Larkspur Coffee Active\nCora Customer · owner\nPayments\nBean Brokers: $820Supplies\nMill & Co: $145Supplies\nBrewline Espresso Systems: $2350Equipment\nHarbor Street Properties: $3200Rent\nCityside Power & "
+    },
+    {
+      "id": "API repo untouched",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "changed repos share one branch",
+      "pass": true,
+      "detail": "acme-web@proto/payment-category-pill, acme-ui@proto/payment-category-pill"
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 43,
+    "costUsd": 0.7272588000000001,
+    "durationMs": 116674,
+    "toolCalls": 41,
+    "toolsUsed": {
+      "Skill": 1,
+      "Bash": 11,
+      "Glob": 1,
+      "Read": 11,
+      "ToolSearch": 1,
+      "Edit": 5,
+      "mcp__stagecraft__mockdb_reset": 1,
+      "mcp__stagecraft__mock_endpoints": 1,
+      "mcp__stagecraft__preview_screenshot": 5,
+      "mcp__stagecraft__mockdb_seed": 1,
+      "mcp__stagecraft__state_set": 1,
+      "mcp__stagecraft__scenario_save": 1,
+      "Write": 1
+    },
+    "skillsUsed": [
+      "stagecraft-build-screen"
+    ],
+    "screenshots": 5,
+    "permissionDenials": [
+      "Bash: {\"command\":\"cd .. && ls; for r in acme-web acme-ui acme-admin acme-api; do echo \\\"== $r\\\"; (cd $r && git status -sb | head -5 && git ls-files | grep -v node_mod",
+      "Bash: {\"command\":\"cd /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlt6d4a && ls && for r in acme-web acme-ui acme-admin acme-api; do echo \\\"== $r\\\"; git -C $r s",
+      "Bash: {\"command\":\"cd /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlt6d4a && ls && git -C acme-web status -sb && git -C acme-web ls-files && git -C acme-ui stat",
+      "Bash: {\"command\":\"cat package.json; npx --no tsc --noEmit -p . 2>&1 | tail -20; cat .claude/skills/stagecraft-handoff/SKILL.md\",\"description\":\"Run type check and read",
+      "Bash: {\"command\":\"npx --no stagecraft workspace status && git status --short && git -C ../acme-ui status --short && git -C ../acme-admin status --short\",\"description\"",
+      "Bash: {\"command\":\"git add src/main.tsx stagecraft/seed.ts stagecraft/scenarios/payment-categories.json && git commit -q -m \\\"Show payment category as a Pill on the da",
+      "Bash: {\"command\":\"git -C ../acme-ui add src/index.tsx\",\"description\":\"Stage the Pill component in acme-ui\"}"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "I added a reusable `Pill` (a small rounded label) to the design system and used it on the dashboard to show each payment's category. Nothing is committed yet: git needed your approval and you hadn't asked for commits.\n\n**What I changed** (both repos are on a shared branch, `proto/payment-category-pill`):\n- **Design system (`acme-ui`):** `Pill` is in `../acme-ui/src/index.tsx` and other teams can import it from `@acme/ui`. It's neutral grey with an outline by default. Teams can pass a `tone` for other colours: brand, ok, warn or bad. It uses the design tokens and has the same shape as the existing status badge.\n- **Fake data:** the two existing payments now have categories, and I added four more fake payments so the list shows a mix: Supplies, Equipment, Rent and Utilities.\n- **Dashboard:** each payment shows its category as a pill. If a payment has no category, the pill is simply hidden.\n\n**What I checked:**\n- I took screenshots of the dashboard at desktop width and at 400px. On the narrow screen the pill was pushed away from its payment when the name wrapped. I fixed that, and it now wraps neatly under the text.\n- It also looks right with a frozen account and with a payment that has no category, and the admin app still renders.\n- Stagecraft's check found no mock code in product code and confirmed the mocks match the API contract. The repo has no build, lint or test scripts, so those didn't run.\n- I saved a scenario called `payment-categories` so others can open this exact setup.\n\n**For engineering:** the handoff notes, with a description for each of the two pull requests, are in `stagecraft/handoff-payment-category-pill.md`.\n- **Merge order:** the design-system PR has to merge first.\n- **Backend work:** the real payments API doesn't have a category field yet, and someone needs to decide whether categories come from a fixed list or are free text.\n- **Raw values:** the pill's text size and roundness are raw values, the same ones the status badge uses, because the design system has no tokens for them yet.\n\nShould I commit the changes and open the two pull requests as drafts? They'd stay drafts for an engineer to review and merge.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "acme-web": [
+      "src/main.tsx",
+      "stagecraft/seed.ts",
+      "stagecraft/handoff-payment-category-pill.md",
+      "stagecraft/scenarios/payment-categories.json"
+    ],
+    "acme-ui": [
+      "src/index.tsx"
+    ],
+    "acme-admin": [],
+    "acme-api": []
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-07-25/T-MULTI-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-25/T-MULTI-01/_admin_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-25/T-MULTI-01/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlt6d4a",
+  "startedAt": "2026-11-18T07:37:20.362Z"
+}

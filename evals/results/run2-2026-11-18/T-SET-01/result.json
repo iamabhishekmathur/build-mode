@@ -1,0 +1,155 @@
+{
+  "taskId": "T-SET-01",
+  "title": "Set up a React + Vite app from scratch (Ledgerly)",
+  "category": "setup",
+  "pass": false,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /payments",
+      "pass": true
+    },
+    {
+      "id": "renders /onboarding",
+      "pass": true
+    },
+    {
+      "id": "renders /settings/agents",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "employee persona shows in the UI",
+      "pass": false,
+      "detail": "persona member: Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nMax Brennan · member\nAssistant\nNorthwind Studio\nBalance\n\n$48,210.55\n\nMonthly limit\n\n$14,380"
+    },
+    {
+      "id": "frozen state changes the UI",
+      "pass": true,
+      "detail": "account=frozen: Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nAda Okafor · admin\nAssistant\nThis account is frozen. Payments and cards are paused while we"
+    },
+    {
+      "id": "cross-origin API mocked (agents page)",
+      "pass": true,
+      "detail": "Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nAda Okafor · admin\nAssistant\nAgent controls\n\nDecide what each AI agent can do with your money.\n\nAgent\tCan do\tSp"
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 53,
+    "costUsd": 1.2642722000000002,
+    "durationMs": 233765,
+    "toolCalls": 50,
+    "toolsUsed": {
+      "Skill": 2,
+      "Bash": 10,
+      "Write": 2,
+      "Edit": 3,
+      "ToolSearch": 1,
+      "mcp__stagecraft__mock_endpoints": 2,
+      "Grep": 8,
+      "mcp__stagecraft__tape_create": 1,
+      "mcp__stagecraft__state_catalog": 1,
+      "mcp__stagecraft__preview_screenshot": 11,
+      "mcp__stagecraft__persona_set": 1,
+      "mcp__stagecraft__state_set": 1,
+      "mcp__stagecraft__tape_play": 2,
+      "Read": 3,
+      "mcp__stagecraft__mockdb_reset": 1,
+      "mcp__stagecraft__preview_url": 1
+    },
+    "skillsUsed": [
+      "stagecraft-setup",
+      "stagecraft-make-tape"
+    ],
+    "screenshots": 11,
+    "permissionDenials": [
+      "Bash: {\"command\":\"for f in src/*.ts* src/pages/* stagecraft/seed.ts stagecraft/mocks.ts stagecraft/states.ts .env.stagecraft package.json vite.config.ts; do echo \\\"==",
+      "Bash: {\"command\":\"python3 - <<'EOF'\\np='stagecraft.config.ts'\\ns=open(p).read()\\ns=s.replace(\\\"apiOrigins: ['/api'],\\\",\\\"apiOrigins: ['/api', 'https://api.ledgerly.ex",
+      "Bash: {\"command\":\"curl -sS -N --max-time 3 'http://127.0.0.1:4400/api/assistant/stream?__sc_session=chat' -H 'accept: text/event-stream' | head -c 3000; echo; echo EX",
+      "Bash: {\"command\":\"curl -sS -N --max-time 3 -H 'accept: text/event-stream' 'http://127.0.0.1:4400/api/assistant/stream?__sc_session=chat'\",\"description\":\"Read the mock"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "The app is running on fake data at **http://127.0.0.1:4400/**. Home, Payments, Onboarding, Agent controls and the assistant chat all work, and none of them talk to a real backend. I checked each one with screenshots and clicked through the main actions.\n\n**Switching who you are and the account status:** open the Stagecraft panel on the page.\n- **Admin / Employee:** the admin is Ada Okafor and the employee is Max Brennan. An admin sees Approve/Reject buttons on payments. An employee sees \"Waiting for an admin\" and is blocked from approving or from pausing agents.\n- **Active / Frozen:** Frozen shows the red \"This account is frozen\" banner on every screen, and approving a payment returns an \"account is frozen\" error.\n\n**What's on each screen:**\n- **Home:** a company called Northwind Studio with a $48,210.55 balance, a monthly limit bar at 58% used, and recent payments.\n- **Payments:** seven payments to vendors like AWS, Figma and WeWork. Two are waiting for approval; approving or rejecting one updates the list straight away.\n- **Onboarding:** the admin is on step 3 of 4 and the employee on step 2. \"Complete step\" moves forward through to \"Onboarding complete.\"\n- **Agent controls:** three AI agents (Bookkeeper, Bill Pay Assistant, Travel Booker) that you can pause and resume.\n- **Assistant chat:** a scripted conversation where you ask it to pay an Adobe invoice. It checks your spend, drafts the payment and shows an approval card. Approve or Reject in the chat and it replies to match, and the payment shows up in Payments. To jump straight to the approval card, open http://127.0.0.1:4400/?sc_tape=vendor-payment-approval&sc_step=9 and click **Assistant**.\n\nYour changes stay in your own session. To start fresh, use the reset option in the panel. If you play the scripted conversation more than once, an extra Adobe payment from the earlier run can stay in the list until you reset.\n\nWhat I changed, so an engineer can review it later:\n- `stagecraft/seed.ts`: the fake data.\n- `stagecraft/mocks.ts`: the fake responses, including the admin-only and frozen-account rules.\n- `stagecraft.config.ts`: renamed \"Member\" to \"Employee\", added fake data for the Agent controls page (it talks to a separate server), and connected the chat to the scripted conversation.\n- `stagecraft/tapes/vendor-payment-approval.json`: the scripted conversation.\n\nI didn't change any of the app's own screens. Stagecraft's health check passes with every call the app makes now answered by fake data, and the code type-check passes. Nothing is committed yet.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": [
+      ".agents/skills/stagecraft-add-state/SKILL.md",
+      ".agents/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".agents/skills/stagecraft-build-screen/SKILL.md",
+      ".agents/skills/stagecraft-create-variant/SKILL.md",
+      ".agents/skills/stagecraft-handoff/SKILL.md",
+      ".agents/skills/stagecraft-make-tape/SKILL.md",
+      ".agents/skills/stagecraft-self-check/SKILL.md",
+      ".agents/skills/stagecraft-setup/SKILL.md",
+      ".claude/settings.json",
+      ".claude/skills/stagecraft-add-state/SKILL.md",
+      ".claude/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".claude/skills/stagecraft-build-screen/SKILL.md",
+      ".claude/skills/stagecraft-create-variant/SKILL.md",
+      ".claude/skills/stagecraft-handoff/SKILL.md",
+      ".claude/skills/stagecraft-make-tape/SKILL.md",
+      ".claude/skills/stagecraft-self-check/SKILL.md",
+      ".claude/skills/stagecraft-setup/SKILL.md",
+      ".codex/config.toml",
+      ".cursor/mcp.json",
+      ".cursor/rules/stagecraft.mdc",
+      ".cursor/skills/stagecraft-add-state/SKILL.md",
+      ".cursor/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".cursor/skills/stagecraft-build-screen/SKILL.md",
+      ".cursor/skills/stagecraft-create-variant/SKILL.md",
+      ".cursor/skills/stagecraft-handoff/SKILL.md",
+      ".cursor/skills/stagecraft-make-tape/SKILL.md",
+      ".cursor/skills/stagecraft-self-check/SKILL.md",
+      ".cursor/skills/stagecraft-setup/SKILL.md",
+      ".env.stagecraft",
+      ".mcp.json",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "stagecraft.config.ts",
+      "stagecraft.detect.json",
+      "stagecraft/agents.md",
+      "stagecraft/mocks.ts",
+      "stagecraft/scenarios/.gitkeep",
+      "stagecraft/seed.ts",
+      "stagecraft/skills/add-state/SKILL.md",
+      "stagecraft/skills/apply-figma-frame/SKILL.md",
+      "stagecraft/skills/build-screen/SKILL.md",
+      "stagecraft/skills/create-variant/SKILL.md",
+      "stagecraft/skills/handoff/SKILL.md",
+      "stagecraft/skills/make-tape/SKILL.md",
+      "stagecraft/skills/self-check/SKILL.md",
+      "stagecraft/skills/setup/SKILL.md",
+      "stagecraft/states.ts",
+      "stagecraft/tapes/.gitkeep",
+      "stagecraft/tapes/vendor-payment-approval.json"
+    ]
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-01/_payments.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-01/_onboarding.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-01/_settings_agents.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-07-11/T-SET-01/_settings_agents.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-SET-01-mwls9e47",
+  "startedAt": "2026-11-18T07:11:42.007Z"
+}

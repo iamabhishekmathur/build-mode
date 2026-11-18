@@ -16,9 +16,11 @@ export default defineConfig<DB>({
   apiOrigins: ['/api'],
   handlers,
   seed,
+  // PLACEHOLDERS: replace with your product's real roles, in your users' words.
+  // Doctor warns while "(placeholder)" is in a label.
   personas: {
-    admin: { label: 'Admin', userId: 'u1', role: 'admin' },
-    member: { label: 'Member', userId: 'u2', role: 'member' },
+    admin: { label: 'Admin (placeholder)', userId: 'u1', role: 'admin' },
+    member: { label: 'Member (placeholder)', userId: 'u2', role: 'member' },
   },
   defaultPersona: 'admin',
   states,
@@ -56,8 +58,8 @@ export const states = defineStates({
     label: 'Account',
     default: 'active',
     states: {
-      active: { label: 'Active', db: { 'account.status': 'active' } },
-      frozen: { label: 'Frozen', db: { 'account.status': 'frozen' } },
+      active: { label: 'Active (placeholder)', db: { 'account.status': 'active' } },
+      frozen: { label: 'Frozen (placeholder)', db: { 'account.status': 'frozen' } },
     },
   },
 });

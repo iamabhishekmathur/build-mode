@@ -8,7 +8,8 @@ description: Get this repo running on Stagecraft mock data so a designer can pro
 Goal: the app renders through the Stagecraft proxy with the panel visible and **every** API call served by a mock.
 
 1. Run `npx --no stagecraft doctor`. Read every line. Fix errors first.
-2. Start `npx --no stagecraft dev`. Open the proxy URL it prints.
+2. Start `npx --no stagecraft dev`.
+   - `stagecraft init` wrote **placeholder** personas and states (labels end in "(placeholder)"). Replace them with the product's real roles and states. Use the user's own words: if they say "employee", the persona, its seed user's role and what the UI shows must say employee, not "member". Open the proxy URL it prints.
 3. Call `mock_endpoints`. For each entry in `unmocked`:
    - Find the API type or spec for it (`stagecraft.detect.json` lists specs).
    - Add seed data to `stagecraft/seed.ts` and a handler to `stagecraft/mocks.ts`. Return data that matches the app's types.

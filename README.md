@@ -36,7 +36,7 @@ The address bar always reproduces the current view (`__sc=` param). Agents use t
 ## Tests
 
 ```bash
-npm test              # 74 tests: unit, HTTP integration, CLI, MCP (stdio), production bundle, Playwright E2E
+npm test              # 93 tests: unit, HTTP integration, CLI, MCP (stdio), workspaces, production bundle, Playwright E2E (Vite, Next.js, multi-repo)
 npm run typecheck
 ```
 
@@ -86,6 +86,10 @@ const sidebar = useFlag('new-nav', false);
 
 If you use React Query, Apollo or SWR, put their provider **inside** `<StagecraftRoot>` so a state change also clears their cache.
 
+## Eval results (Claude Code, headless)
+
+Starting from a bare `stagecraft init`, or from a prepared repo, Claude Code passed **11 of 12 runs** (4 tasks × 3 runs): setting up a Vite app and a Next.js RSC app on mock data, adding a product state, and changing a design-system repo plus an app across 4 repos. Median cost was $0.84 and median time about 2 minutes per run. With no agent, the product alone passes 0 of 4. The numbers are small and the fixtures are my own: read [evals/README.md](evals/README.md) for the limits and [evals/results/SUMMARY.md](evals/results/SUMMARY.md) for the failures and findings.
+
 ## PRD traceability (this slice)
 
 ✅ done and tested · ◐ partial · ✗ not built. "Test" names the file that proves it.
@@ -116,6 +120,8 @@ If you use React Query, Apollo or SWR, put their provider **inside** `<Stagecraf
 | 801, 805, 806 panel | ✅ | Shadow DOM; hidden mode adds zero pixels (pixel-equal E2E); URL reproduces the view in a new browser. |
 | 802 panel controls | ◐ | Persona, states, flags, variants, scenarios, tapes, faults, mock DB. No versions, viewport, theme or locale controls. |
 | 803 browsers | ◐ | Tested in Chromium only. |
+| 307 headless agent runs | ◐ | Claude Code (`claude -p`) in the eval harness. Codex and Cursor not yet. |
+| — multi-repo | ✅ | Not in the PRD. Apps on path or port mounts sharing one mock DB, library linking, one branch across repos, OpenAPI drift check, agent context. `workspace.test.ts`, `multirepo.test.ts`. |
 
 ## Where I deviated from the PRD, and why
 
