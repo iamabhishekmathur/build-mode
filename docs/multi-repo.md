@@ -31,7 +31,7 @@ workspace: {
 - spec operations with no mock (the prototype will hit a 404);
 - mocks for endpoints the spec does not have (the prototype relies on an API that does not exist: that is backend work to list at handoff).
 
-**Git: one branch name, one PR per changed repo.** `stagecraft workspace branch <name>` puts every writable repo on `proto/<name>`. `stagecraft workspace status` lists changed repos; that list is the PR set. Library PRs merge first; app PRs depend on them.
+**Git: one branch name, one PR per changed repo.** `stagecraft workspace branch <name>` puts every writable repo on `proto/<name>`. `stagecraft workspace status` lists changed repos; that list is the PR set. Library PRs merge first; app PRs depend on them. `stagecraft pr open --workspace` opens that PR set ([github.md](github.md)).
 
 **Agents see every repo.**
 - Claude Code: `.claude/settings.json` gets `permissions.additionalDirectories` for the other repos, plus Stagecraft tool permissions.
@@ -56,4 +56,4 @@ stagecraft doctor                      + missing repos, unlinked libs, duplicate
 - **Libraries that ship only a build** (`main: dist/index.js`) need their watch build running. Stagecraft does not start it yet.
 - **Module federation / runtime micro-frontends** that fetch remote bundles from other origins are not routed (Tier 3 in the PRD).
 - **Codex** needs the other repos as writable roots. I have not verified the Codex flag for that; Claude Code and Cursor paths are generated.
-- **No GitHub App yet**, so the linked PR set is a list, not real PRs.
+- **No GitHub App yet.** `stagecraft pr open --workspace` opens the linked PR set (one draft PR per changed repo, libraries first, cross-linked under "Related PRs") with a personal token; see [github.md](github.md). It is tested against a fake GitHub server only.

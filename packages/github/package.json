@@ -1,0 +1,11 @@
+{
+  "name": "@stagecraft/github",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "GitHub integration: prototype branches, draft PRs, preview comments, checks and the handoff gate. Never merges.",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": {
+    "@stagecraft/server": "0.1.0",
+    "zod": "^3.25.0"
+  }
+}

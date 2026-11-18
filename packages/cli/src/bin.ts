@@ -6,6 +6,7 @@ import { detect, Engine, findConfig } from '@stagecraft/server';
 import { drift, sync } from './agents.ts';
 import { doctor } from './doctor.ts';
 import { dev } from './dev.ts';
+import { GITHUB_HELP, githubCommand } from './github.ts';
 import { init } from './init.ts';
 import { loadRepos, workspaceCommand } from './workspace.ts';
 import { checkCommand, describeCommand, matrixCommand } from './checks.ts';
@@ -33,7 +34,7 @@ Usage:
   stagecraft describe [--gate]    PR description: screens, states, scenarios, tapes, backend work, gate
   stagecraft share [path] [--expires 7d] [--password p] | share list | share revoke <id>
                                   Share link to a frozen copy of the current view (viewers: explore + comment)
-  stagecraft mcp                  Run the MCP server on stdio (used by Claude Code, Codex, Cursor)
+${GITHUB_HELP}  stagecraft mcp                  Run the MCP server on stdio (used by Claude Code, Codex, Cursor)
 `;
 
 function flag(args: string[], name: string) {
@@ -78,6 +79,9 @@ async function main() {
       return describeCommand(cwd, args, log);
     case 'share':
       return shareCommand(cwd, sub, rest, log);
+    case 'pr':
+    case 'branch-from':
+      return githubCommand(cwd, cmd, sub, rest, log);
     case 'agents': {
       const { root, repos } = await loadRepos(cwd);
       if (sub === 'sync') {
