@@ -1,143 +1,150 @@
-# Stagecraft (working name): local core
+# Stagecraft (working name)
 
-Prototype in the **real product** on **mock data**, in any product state, with the coding agent you already use.
+Prototype in the **real product** on **mock data**, in any product state, with the coding agent you already use (PRD: *"Builder Mode for Everyone"*).
 
-This repo builds slices of the PRD *"Builder Mode for Everyone"*:
-1. the **local core**, plus the **stateful mock DB** and **tapes**;
-2. **server-side mocking** for SSR / React Server Components, proven on Next.js 16 App Router;
-3. **multi-repo products**: several apps, a design-system repo and an API repo behind one proxy ([docs/multi-repo.md](docs/multi-repo.md));
-4. an **eval harness v0** that runs Claude Code headless on prototyping tasks and checks the result ([evals/](evals/)).
-
-It does not include the desktop app, the cloud runtime, GitHub/Figma integrations, feedback, checks, billing or admin. See [What is not built](#what-is-not-built).
+Designers and PMs get a panel on top of the running app: switch persona, product state, flags, variants, time and faults; save scenarios; play assistant "tapes"; pin comments that go to the agent. The agent gets the same controls through MCP, plus skills, checks and a handoff gate, so the code it writes is shippable.
 
 > **Name warning (OQ-1):** the npm name `stagecraft` belongs to an unrelated package. Every generated command uses `npx --no stagecraft`, which fails instead of downloading it. Pick a product name with a free npm name before publishing.
 
-## Try it (2 minutes)
+## Try it
 
-Needs Node ≥ 22.18. Node runs the TypeScript sources directly, so there is no build step except for the browser bundle.
+Needs Node ≥ 22.18. Node runs the TypeScript sources directly.
 
 ```bash
 npm install
-npm run demo          # builds the panel, starts Vite + the Stagecraft proxy
-# open http://127.0.0.1:4400
+npm run demo          # builds the panel, starts the React demo + proxy → http://127.0.0.1:4400
+npm test              # unit, integration, MCP, CLI, Playwright E2E (React, Next.js, Vue, Nuxt, multi-repo, flags)
 ```
 
-In the panel (bottom right; ⇤ docks it left; Alt+Shift+S hides it):
+Panel tour: switch **Persona** and **Account** state, then press **💬** and click any element to leave a comment. Next, open the **Assistant** with the vendor-payment tape loaded. Press ⇆ on a variant to see the options side by side. `npx --no stagecraft share` makes a link for someone else.
 
-1. **Persona** → *Employee (Eli)*. **Account** → *Frozen*. The app re-renders from the mock DB. There is no page reload.
-2. Open **Onboarding** as Eli and complete a step. Switch to Admin, then back. Eli's progress is kept (FR-503).
-3. Open **Agent controls**. **Variants** → `agent-list-layout` → *cards*. Press ⇆ to see both options side by side.
-4. **Scenarios** → *Bill pay company – frozen*. Type a name and press **Save**: this writes `stagecraft/scenarios/<name>.json`.
-5. **Tape** → *$4,200 vendor payment…*. Dock the panel left (⇤) and open **Assistant**. The chat streams, times out once, and you press **Retry**. Then **Approve** or **Reject** in the real UI, and the tape follows that branch.
-6. Deep link: `http://127.0.0.1:4400/?__sc_session=fork&sc_tape=vendor-payment-approval&sc_step=9`
+## What is in the box
 
-The address bar always reproduces the current view (`__sc=` param). Agents use the same features through MCP (`npx stagecraft mcp`).
-
-## Tests
-
-```bash
-npm test              # 93 tests: unit, HTTP integration, CLI, MCP (stdio), workspaces, production bundle, Playwright E2E (Vite, Next.js, multi-repo)
-npm run typecheck
-```
-
-E2E runs real Vite, the real proxy and headless Chromium against the demo app. CI is in `.github/workflows/ci.yml`.
-
-## Layout
-
-| Package | What it is |
+| Package | What it does |
 |---|---|
-| `packages/core` | Isomorphic types and pure logic: DB path patches, tape format + validator, scenario `extends`, share-link encoding, `defineConfig`. JSON schemas in `schema/`. |
-| `packages/server` | Dev proxy: HTML injection, CSP strip (dev only), mock routing, faults, sessions, mock DB, fork-on-open, scenarios, tape player (SSE + WebSocket), control API, stack detection. |
-| `packages/runtime` | Browser runtime + panel (Web Component in Shadow DOM, 18 kB). Injected by the proxy. Product code never imports it. |
-| `packages/react` | React adapter: `<StagecraftRoot>`, `<Variant>`, `useVariant`, `useFlag`, `useMockDbVersion`. No-ops in production. |
-| `packages/mcp` | `stagecraft-mcp` (stdio): 24 tools for states, personas, flags, variants, scenarios, mock DB, faults, tapes, preview URL/navigate/screenshot. |
-| `packages/cli` | `stagecraft init / detect / dev / doctor / agents sync / agents check / scenario list / tape validate / mcp`. Templates for agent instructions and 8 skills. |
-| `packages/evals` | Eval harness v0: copies a fixture repo, runs `claude -p` with the repo's generated settings, restarts the app and checks the result. |
-| `examples/ref-react-vite` | Reference app "Ledgerly" (React 19, Vite, React Router) wired for Stagecraft. Generated `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, skills and MCP configs are checked in. |
-| `examples/ref-next-app` | Next.js 16 App Router app; server components fetch a cross-origin API. |
-| `examples/multi-repo` | Four repos of one product: `acme-web` (host), `acme-ui` (design system), `acme-admin` (second app at `/admin`), `acme-api` (OpenAPI contract). |
+| `core` | Types and pure logic: DB path patches, tapes, scenarios, share links, PII scrubber, seeded fake-data generators. |
+| `server` | Dev proxy: HTML injection, mocks, mock DB, sessions, forks, faults, clock, tapes (SSE and WebSocket), feedback, share links, remote-access lock, server-side `fetch` interceptor (SSR/RSC), multi-repo workspaces, stack detection. |
+| `runtime` | Browser runtime + panel (Shadow DOM): states, flags, variants, scenarios, tapes, faults, mock DB, time, comments, element picker with source mapping. |
+| `react`, `vue` | Adapters: `StagecraftRoot`, `Variant`, `useFlag`, `useVariant`, `useMockDbVersion`. No-ops in production. |
+| `flags` | Vendor adapters: OpenFeature (web + server), LaunchDarkly (v3, v4), GrowthBook, Unleash. |
+| `checks` | fast (types + lint), components (design-system hygiene), visual (state matrix + detectors), a11y (axe), Figma fidelity, token map, matrix view, handoff gate, PR description. |
+| `github` | Prototype branches, draft PRs, preview comments + checks, branch-from, ready-for-review behind the gate, multi-repo PR sets. No merge. |
+| `mcp` | `stagecraft-mcp`: 48 tools for the agent (states, scenarios, mocks, tapes, feedback, checks, GitHub, dev logs/restart…). |
+| `cli` | `init`, `dev`, `doctor`, `report`, `guide`, `discover`, `mocks generate`, `check …`, `matrix`, `describe`, `share`, `pr …`, `workspace …`, `agents sync/check`, `hook …`. Templates for agent instructions and 9 skills. |
+| `evals` | Eval harness: runs Claude Code headless on prototyping tasks and checks the result automatically. |
+
+Reference apps in `examples/`:
+- `ref-react-vite` (React 19 + Vite);
+- `ref-next-app` (Next.js 16 RSC);
+- `ref-vue-vite` (Vue 3 + Pinia);
+- `ref-nuxt` (Nuxt 4 SSR);
+- `ref-flags` (real flag SDKs);
+- `multi-repo` (four repos of one product).
+
+Docs: [multi-repo](docs/multi-repo.md), [flags](docs/flags.md), [GitHub](docs/github.md), [what is left and how to build it](docs/remaining.md), [evals](evals/README.md).
 
 ### How it works
 
 ```
-browser ──▶ Stagecraft proxy :4400 ──▶ your dev server (any framework)
-   │            │  injects boot data + runtime.js into HTML
-   │            │  /api/* and declared API origins → mock handlers + mock DB (never the real backend)
-   │            │  /__stagecraft/api/* → control API (panel, MCP)
-   │            └─ tape endpoint → tape player (SSE or WebSocket)
-   └─ runtime.js: routes fetch/XHR/EventSource/WebSocket for cross-origin API hosts to the proxy,
-                  keeps the URL linkable, mounts the panel, tells adapters to re-render
-agent ──MCP──▶ stagecraft-mcp ──HTTP──▶ control API (same sessions the browser sees)
+browser ──▶ Stagecraft proxy ──▶ app dev server(s)  ← started with a Node preload: server-side fetch → mocks
+   │          │ injects runtime + panel into HTML
+   │          │ API origins → mock handlers + mock DB (per session; forks for links and compare frames)
+   │          │ /__stagecraft/api → control API (panel, MCP, CLI)   ·   only loopback, or share-link viewers
+   └─ runtime: reroutes cross-origin API calls, keeps the URL linkable, panel, picker, adapters
+agent ──MCP──▶ stagecraft-mcp ──▶ control API (same sessions) · checks · GitHub · dev logs/restart
 ```
 
-The mock DB lives in the proxy (Node), not in the browser. So the app, the panel and the agent all see one state, and share links can fork it.
+## PRD status
 
-**Server rendering.** `stagecraft dev` starts the dev server with `node --import @stagecraft/server/preload`. The preload keeps the incoming request's session in `AsyncLocalStorage` and sends server-side `fetch` calls to API origins through the proxy with that session. So server components, SSR loaders and the browser all read one mock DB, per session. Proven on Next.js 16 App Router (RSC, client navigation, forks). Other Node SSR frameworks (Nuxt, SvelteKit, Remix, Angular SSR) use the same mechanism but are not tested yet. Not covered: edge runtimes, and server code that calls APIs with `http.request` (axios on Node) instead of `fetch`.
+✅ built and tested · ◐ partial (see note) · ✗ not built ([how to build it](docs/remaining.md)). "Fake GitHub" means tested against a local fake of the GitHub API; nothing ran against real GitHub.
 
-### Wiring a repo
+### Functional requirements
 
-`npx stagecraft init` writes `stagecraft.config.ts`, `stagecraft/{seed,mocks,states}.ts`, `.env.stagecraft`, agent files and MCP configs. Everything is under `stagecraft/`, agent folders, or dev-only config (FR-106). Product code needs only:
+| Area | FR | Status | Notes |
+|---|---|---|---|
+| Onboarding | 101 detect | ✅ | React, Next, Vue, Nuxt, SvelteKit, Angular, Remix, Astro, CRA…; tiers, package manager, monorepo, dev cmd/port, Node, router, API style + specs, state libs, flags, design system, Storybook. |
+| | 102 monorepo | ◐ | Apps listed; no picker. Multi-repo products ✅ ([docs](docs/multi-repo.md)). |
+| | 103 setup agent | ◐ | The customer's agent + `setup` skill + `init`, `dev_logs`, `dev_restart`. Measured by T-SET-01/02/03. No hosted setup agent. |
+| | 104 auto-fix | ◐ | CSP strip, env denylist, `.env.stagecraft`, auth/env guidance, restart. Node version switching not automated. |
+| | 105 setup report | ✅ | `stagecraft report` → Markdown for the setup PR; MCP `setup_report`. No desktop app to show it in. |
+| | 106 setup PR | ◐ | `init` writes only allowed paths; `pr open` (fake GitHub). Production build proven free of mock strings, not compared byte for byte. |
+| | 107 setup cache | ✗ | Cloud. |
+| | 108 doctor | ✅ | Plus workspace and OpenAPI drift checks. |
+| | 109 state discovery | ✅ | `stagecraft discover`. Recall on reference apps 10/15 = 67% (target 70%). |
+| Runtime | 201 desktop app | ✗ | Design in docs/remaining.md. |
+| | 202 local runtime | ✅ | `stagecraft dev`. Sends nothing to any Stagecraft server (there is none). |
+| | 203–205 cloud | ✗ | Design in docs/remaining.md. |
+| | 206 logs | ✅ | `dev_logs`, secret values masked. |
+| | 207 own IDE | ✅ | Plain checkout + generated configs. |
+| Agents | 301 Claude Code / Codex / Cursor | ◐ | Configs generated for all three. Only Claude Code exercised (evals). |
+| | 302 MCP server | ✅ | stdio. HTTP transport ✗. |
+| | 303 one source for instructions | ✅ | CI fails on drift. |
+| | 304 skills | ✅ | 9 skills incl. `handle-feedback`. |
+| | 305 component guide | ✅ | All exports, props, stories, usage, do/don't. |
+| | 306 hooks | ✅ | Verified with real Claude Code: the hard-coded-color warning reached the agent in the same turn. |
+| | 307 headless | ◐ | Claude Code in the eval harness. |
+| | 308 keys | ✅ | No keys stored by Stagecraft; hooks block committing secrets. |
+| | 309 plugin | ✗ | |
+| States | 401–405, 409 | ✅ | Catalog, personas, flags, variants, side-by-side, faults. Plus a per-scenario clock. |
+| | 403 flag vendors | ✅ | OpenFeature, LaunchDarkly, GrowthBook, Unleash (endpoints verified in SDK source). Statsig, Split ✗. |
+| | 406 versions | ✗ | |
+| | 407 matrix | ✅ | Grid page; cells link live. 20-cell timing not measured. |
+| | 408 variant cleanup | ✅ | Gate detects leftovers; agent removes (T-HO-01). |
+| Mocks | 501 intercept | ✅ | Browser + server (Next RSC, Nuxt). Not: edge runtime, `http.request` clients. |
+| | 502 generation | ◐ | OpenAPI 3.x + TS types. GraphQL and recorded traffic ✗. |
+| | 503–507 | ✅ | Stateful DB, forks, MCP DB tools, edge presets (1,200 rows, RTL, unicode…), no mock code in production builds. |
+| Scenarios | 601, 602, 604 | ✅ | Files with DB snapshot, `extends`, schema, PII scrubbed. |
+| | 603 library, 605 health | ◐ | Shared via git; doctor marks stale ones. |
+| | 606 fixtures | ✗ | |
+| Tapes | 701–707, 709 | ✅ | Validator, SSE + WS, deep links = playback, branches, errors/timeouts, keyboard timeline. |
+| | 708 recording | ✗ | Scrubber ready. |
+| Panel | 801, 805, 806 | ✅ | Shadow DOM; hidden = zero pixels; linkable URL. |
+| | 802 controls | ◐ | No version/viewport/theme/locale controls. |
+| | 803 browsers | ◐ | Chromium only. |
+| | 804 element picker | ✅ | React 18/19, Vue, Svelte source mapping (React 19 tested). |
+| Feedback | 901–905 | ✅ | Pins, regions, full context, send to agent, before/after replies, only people resolve. |
+| | 906 PR sync, 907 voice | ✗ | |
+| Checks | 1001 visual | ✅ | Detectors + screenshots for the agent's own review. Own seeded set 8/8. |
+| | 1002 Figma | ✅ | Pixel score + regions + images; the agent is the judge. |
+| | 1003–1007 | ✅ | fast ≤ 20 s, a11y (axe), components, handoff, deterministic (10/10 identical). |
+| GitHub | 1101 App | ◐ | Permission set + token flow written; no App registered. |
+| | 1102–1109 | ✅ (fake GitHub) | Branches, draft PRs + label, branch-from, comment + check, gated ready with override, PR description, never merges (static test), co-author trailer. |
+| Figma | 1201, 1202, 1205 | ◐ | Through the user's Figma MCP + skill; not run here (no Figma account). |
+| | 1203, 1204 | ✅ | Token map; fidelity check. |
+| | 1206 | ✗ | |
+| Storybook | 1301 | ◐ | CSF parsing; MCP addon not used. |
+| | 1302, 1304 | ✅ | |
+| | 1303 | ✗ | |
+| Sharing | 1401 | ◐ | Link scope with expiry + password + revoke. Org / named-people scopes need identity. |
+| | 1402 roles | ◐ | Viewer role only. |
+| | 1403–1405 | ✅ | From the local proxy (no cloud): private fork per viewer, explore + comment only, admin switch. |
+| | 1406, 1407 | ✗ | |
+| Admin | 1501–1507 | ✗ | Control plane (docs/remaining.md). Eval harness records tokens and cost. |
 
-```tsx
-<BrowserRouter><StagecraftRoot><App/></StagecraftRoot></BrowserRouter>   // optional; without it, state changes reload the page
-<Variant name="agent-list-layout" options={{ table: <Table/>, cards: <Cards/> }} />
-const sidebar = useFlag('new-nav', false);
-```
+### Non-functional requirements (summary)
 
-If you use React Query, Apollo or SWR, put their provider **inside** `<StagecraftRoot>` so a state change also clears their cache.
+| NFR | Status |
+|---|---|
+| 101 no production data | ◐ Mocks for declared origins; server preload warns about undeclared hosts; `.env.production` never loaded; safety evals. No egress firewall (cloud). |
+| 102 secrets | ◐ Nothing stored; dev logs masked; hooks block secret commits. KMS is cloud. |
+| 103 PII scrubber | ✅ Applied to tapes, scenario snapshots, comments. Labelled set (own generator): 100% removed, 0/600 false positives. |
+| 105 local only | ✅ By design. |
+| 107 GitHub least privilege, no merge | ✅ |
+| 109 prompt injection | ◐ Comments are data (skill); the agent cannot resolve, comment, send or share through MCP; T-SAFE-01 eval. |
+| 106, 108 SOC 2, pen test | ✗ Not engineering-only. |
+| 2xx performance | ◐ Measured: check fast < 20 s, matrix 4 cells < 60 s, state switch re-renders in E2E. Not measured: LCP overhead, cold start (cloud). |
+| 601–603 accessibility | ◐ Panel passes axe WCAG 2.2 AA (light + dark); keyboard control tested. No manual screen-reader audit. |
 
-## Eval results (Claude Code, headless)
+## Evals
 
-Starting from a bare `stagecraft init`, or from a prepared repo, Claude Code passed **11 of 12 runs** (4 tasks × 3 runs): setting up a Vite app and a Next.js RSC app on mock data, adding a product state, and changing a design-system repo plus an app across 4 repos. Median cost was $0.84 and median time about 2 minutes per run. With no agent, the product alone passes 0 of 4. The numbers are small and the fixtures are my own: read [evals/README.md](evals/README.md) for the limits and [evals/results/SUMMARY.md](evals/results/SUMMARY.md) for the failures and findings.
+See [evals/results/SUMMARY.md](evals/results/SUMMARY.md) for the latest run and [evals/README.md](evals/README.md) for how the harness works and its limits.
 
-## PRD traceability (this slice)
+## Where this deviates from the PRD
 
-✅ done and tested · ◐ partial · ✗ not built. "Test" names the file that proves it.
-
-| FR | Status | Notes / test |
-|---|---|---|
-| 101 detect stack | ✅ | Framework + tier, bundler, package manager, monorepo, dev cmd/port, Node, router, API style + specs, state libs, flag vendor, design system, Storybook (+ MCP addon). `cli.test.ts`. The ≥95% AC needs the full reference suite, which does not exist yet. |
-| 102 monorepo | ◐ | Lists apps; no app picker. |
-| 104 auto-fix setup | ◐ | CSP stripped; env denylist + `.env.stagecraft`. No setup agent; the `setup` skill guides the user's agent. |
-| 105 / 108 report, doctor | ✅ | `stagecraft doctor`: config, state patches, stale scenarios, unmocked endpoints (static + runtime), mock leakage, agent-file drift. |
-| 106 setup files | ◐ | `init` writes only allowed paths. No PR (no GitHub App yet). |
-| 207 own IDE/terminal | ✅ | Plain checkout; `.mcp.json`, `.cursor/mcp.json`, `.codex/config.toml`. |
-| 302 MCP server | ✅ stdio | `mcp.test.ts`. No Streamable HTTP yet. **Tool names differ from the PRD** (see below). |
-| 303 instructions from one source | ✅ | `stagecraft/agents.md` → `AGENTS.md` (managed block keeps user text), `CLAUDE.md` (`@AGENTS.md`), `.cursor/rules/*.mdc`. `agents check` fails CI on drift. |
-| 304 skills | ◐ | 8 of 9 skills, in `.claude/skills`, `.agents/skills`, `.cursor/skills`. `handle-feedback` is missing because feedback is not built. |
-| 401 state catalog | ✅ | `stagecraft/states.ts`, typed. DB patch + forced flags per state. |
-| 402 personas | ✅ | Persona switches keep the DB. |
-| 403 flags | ◐ | In-house flags with per-session overrides. **No vendor adapters yet** (OpenFeature, LaunchDarkly are MVP P0 in the PRD). |
-| 404 variants | ✅ | `<Variant>` / `useVariant`; switch with no rebuild or reload. E2E. |
-| 405 side by side | ✅ | `/__stagecraft/compare`: 2–4 forked frames, scroll + nav sync. E2E. |
-| 409 faults | ✅ | Latency, status, no response per endpoint; app refetches. E2E. |
-| 501 intercept | ✅ / ◐ | Browser: proxy + runtime patching (not a Service Worker; see below). Server: Node preload for `fetch` (Next.js 16 RSC E2E). Not covered: edge runtime, `http.request` clients. |
-| 503 / 504 / 505 mock DB | ✅ | Stateful per session; `shared` mode; fork-on-open. FR-503 AC passes in E2E. MCP `mockdb_*`. |
-| 507 mock isolation | ✅ | Production `vite build` contains zero mock strings. `bundle.test.ts`. |
-| 601 / 602 / 604 scenarios | ✅ | JSON files with DB snapshot, `extends`, schema. Pixel-diff AC not measured; state + DB reproduce exactly. |
-| 603 / 605 library, health | ◐ | Shared through git. `doctor` marks stale scenarios. |
-| 701–707, 709 tapes | ✅ | Validator + schema; SSE and WebSocket; deep link = playback (unit-tested for event history + DB); interactive branches; timeout/retry, partial stream, error; keyboard timeline. E2E for J-7. |
-| 801, 805, 806 panel | ✅ | Shadow DOM; hidden mode adds zero pixels (pixel-equal E2E); URL reproduces the view in a new browser. |
-| 802 panel controls | ◐ | Persona, states, flags, variants, scenarios, tapes, faults, mock DB. No versions, viewport, theme or locale controls. |
-| 803 browsers | ◐ | Tested in Chromium only. |
-| 307 headless agent runs | ◐ | Claude Code (`claude -p`) in the eval harness. Codex and Cursor not yet. |
-| — multi-repo | ✅ | Not in the PRD. Apps on path or port mounts sharing one mock DB, library linking, one branch across repos, OpenAPI drift check, agent context. `workspace.test.ts`, `multirepo.test.ts`. |
-
-## Where I deviated from the PRD, and why
-
-1. **MCP tool names use `_`, not `.`** (`state_set`, not `state.set`). The Anthropic and OpenAI APIs accept only `[a-zA-Z0-9_-]` in tool names. Dotted names can fail in the agents we target. A test enforces the rule.
-2. **No Service Worker.** The runtime patches `fetch`, `XMLHttpRequest`, `EventSource` and `WebSocket` before app code runs, and same-origin API paths are served by the proxy. A Service Worker is not active on the first page load and needs scope and registration handling. Cost of this choice: requests from Web Workers and cross-origin iframes are not routed. Revisit if a design partner needs that.
-3. **The mock DB lives in the proxy**, so the app, the panel and MCP share one state, and links can fork it.
-4. **Deep-link params are `sc_tape` / `sc_step`**, not `tape` / `step`, so they cannot collide with app params.
-5. **A tape always starts from a known DB** (its scenario, or seed + selected states). Without this, a deep link opened in a session where the tape already ran gave a different result. Loading a tape therefore discards that session's ad-hoc DB writes.
-6. **Added: panel dock toggle.** The E2E run showed that the bottom-right panel covers right-side drawers, such as the demo's chat. Expect this in many SaaS apps.
-
-## What is not built
-
-Desktop app, cloud runtime and sandboxes, GitHub App and draft PRs, Figma and Storybook integrations (only detection, plus the `apply-figma-frame` skill), feedback pins (FR-9xx), checks (FR-10xx; only `preview_screenshot` exists, for the `self-check` skill), element picker, versions, matrix view, mock generation from OpenAPI/GraphQL (FR-502), state discovery (FR-109), component guide (FR-305), hooks, sharing scopes, admin, billing, eval harness.
-
-## Known risks in this slice
-
-- **Not tested with real agents.** MCP is tested with the official SDK client over stdio. Claude Code, Codex and Cursor have not run the skills end to end here: this environment has no agent credentials. Do that next.
-- **SSR beyond Next.js** (Nuxt, SvelteKit, Angular SSR) uses the same preload but is not tested. Next.js `fetch` caching (`force-cache`, `revalidate`) sits above our interceptor: cached server data can survive a state change.
-- **No auth on the control API.** The proxy binds to `127.0.0.1` by default. `--host 0.0.0.0` exposes state control and mock-DB writes to your network.
+1. **MCP tool names use `_`**, not `.`: the Anthropic and OpenAI APIs only allow `[a-zA-Z0-9_-]`.
+2. **No Service Worker.** The runtime patches network APIs before app code runs; a Node preload covers server-side `fetch`.
+3. **The mock DB lives in the proxy**, so the app, the panel and the agent share one state, and links fork it.
+4. **Tapes start from a known DB** (scenario, or seed + states), so deep links equal playback.
+5. **No cookies for sessions**: header, query, then `Referer`. Compare frames and share viewers stay separate in one browser.
+6. **Remote clients only reach share-link viewer sessions.** The PRD assumed a cloud with SSO; locally this is the safe default.
+7. **The agent is the vision judge.** Checks return screenshots and diffs; there is no separate vision-model service or calibration yet.
