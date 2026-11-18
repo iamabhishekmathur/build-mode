@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { clone, type Json, type SessionState } from '@stagecraft/core';
+import { clone, scrubText, type Json, type SessionState } from '@stagecraft/core';
 import { UserError, type Engine } from './engine.ts';
 import { settle } from './settle.ts';
 
@@ -122,7 +122,8 @@ export class FeedbackStore {
       id,
       createdAt: new Date().toISOString(),
       author: input.author?.trim() || 'Viewer',
-      text: input.text.trim(),
+      // Comments marked for external viewers end up in PRs: no PII in the text (NFR-103).
+      text: scrubText(input.text.trim()).text,
       status: 'open',
       url: input.url,
       viewport: input.viewport,

@@ -138,3 +138,48 @@ describe('init placeholders', () => {
     expect(r.warnings.join('\n')).toMatch(/Template placeholders are still in the config: persona "admin", persona "member", state account.active/);
   });
 });
+
+describe('Claude Code hooks (FR-306)', () => {
+  const hook = (cwd: string, kind: string, event: unknown) => spawnSync('node', [BIN, 'hook', kind], { cwd, input: JSON.stringify(event), encoding: 'utf8' });
+  it('warns the agent about a hard-coded color in the same turn (exit 2 + stderr)', () => {
+    const fx = fixture('hook');
+    const root = fx.root;
+    mkdirSync(join(root, 'src'));
+    execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: root });
+    writeFileSync(join(root, 'src/A.tsx'), "export const A = () => <h1 style={{ color: '#ff0000' }}>Hi</h1>;\n");
+    const r = hook(root, 'post-edit', { tool_name: 'Edit', tool_input: { file_path: join(root, 'src/A.tsx') } });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/line 1: Hard-coded color "#ff0000"/);
+    writeFileSync(join(root, 'src/B.tsx'), 'export const B = () => <h1>Hi</h1>;\n');
+    expect(hook(root, 'post-edit', { tool_input: { file_path: join(root, 'src/B.tsx') } }).status).toBe(0);
+    expect(hook(root, 'post-edit', { tool_input: { file_path: join(root, 'stagecraft/seed.ts') } }).status).toBe(0);
+  });
+
+  it('blocks commits with secrets or production env files, and plain npx stagecraft', () => {
+    const fx = fixture('hook2');
+    const root = fx.root;
+    execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: root });
+    writeFileSync(join(root, '.env.production'), 'DB=1\n');
+    execFileSync('git', ['add', '.env.production'], { cwd: root });
+    let r = hook(root, 'pre-bash', { tool_input: { command: 'git commit -m "x"' } });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/environment files/);
+    execFileSync('git', ['rm', '-q', '--cached', '.env.production'], { cwd: root });
+    writeFileSync(join(root, 'cfg.ts'), 'export const k = "sk_live_' + 'a'.repeat(24) + '";\n');
+    execFileSync('git', ['add', 'cfg.ts'], { cwd: root });
+    r = hook(root, 'pre-bash', { tool_input: { command: 'git add -A && git commit -m wip' } });
+    expect(r.stderr).toMatch(/Stripe live key/);
+    expect(hook(root, 'pre-bash', { tool_input: { command: 'npx stagecraft doctor' } }).stderr).toMatch(/--no/);
+    expect(hook(root, 'pre-bash', { tool_input: { command: 'npx --no stagecraft doctor' } }).status).toBe(0);
+    expect(hook(root, 'pre-bash', { tool_input: { command: 'ls -la' } }).status).toBe(0);
+  });
+
+  it('agents sync installs the hooks once', () => {
+    const fx = fixture('hook3');
+    sync(fx.root);
+    sync(fx.root);
+    const st = JSON.parse(readFileSync(join(fx.root, '.claude/settings.json'), 'utf8'));
+    expect(st.hooks.PostToolUse).toEqual([{ matcher: 'Edit|Write|MultiEdit', hooks: [{ type: 'command', command: 'npx --no stagecraft hook post-edit' }] }]);
+    expect(st.hooks.PreToolUse).toHaveLength(1);
+  });
+});

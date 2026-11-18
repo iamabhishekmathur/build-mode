@@ -563,7 +563,7 @@ export class StagecraftServer {
       case 'POST /scenarios': {
         const body = await readJson(req);
         const out = e.saveScenario(s, body);
-        return sendJson(res, 200, { file: out.file, name: out.scenario.name });
+        return sendJson(res, 200, { file: out.file, name: out.scenario.name, piiRemoved: out.piiRemoved });
       }
       case 'POST /scenarios/load': {
         const { name } = await readJson(req);

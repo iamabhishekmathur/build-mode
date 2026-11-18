@@ -12,6 +12,7 @@ import { mocksCommand } from './generate/index.ts';
 import { loadRepos, workspaceCommand } from './workspace.ts';
 import { checkCommand, describeCommand, matrixCommand } from './checks.ts';
 import { shareCommand } from './share.ts';
+import { hookCommand } from './hook.ts';
 
 const HELP = `stagecraft — prototype in the real product on mock data
 
@@ -82,6 +83,8 @@ async function main() {
       return describeCommand(cwd, args, log);
     case 'share':
       return shareCommand(cwd, sub, rest, log);
+    case 'hook':
+      return hookCommand(cwd, sub, log);
     case 'pr':
     case 'branch-from':
       return githubCommand(cwd, cmd, sub, rest, log);

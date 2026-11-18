@@ -5,3 +5,4 @@ export * from './scenario.ts';
 export * from './define.ts';
 export * from './share.ts';
 export * from './generate.ts';
+export * from './pii.ts';

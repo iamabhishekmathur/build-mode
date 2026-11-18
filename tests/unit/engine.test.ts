@@ -202,3 +202,17 @@ describe('tape player', () => {
     expect(() => engine.saveTape({ version: 1, id: 'bad', title: 'Bad', events: [{ type: 'nope' }] })).toThrow(/Unknown event type/);
   });
 });
+
+describe('PII scrubbing on save (NFR-103)', () => {
+  it('scrubs tapes and scenario snapshots before they reach the repo', () => {
+    const t = engine.saveTape({ version: 1, id: 'pii', title: 'PII', events: [{ type: 'user_message', text: 'Refund maria@gmail.com to card 4111 1111 1111 1111' }] });
+    expect(t.piiRemoved).toEqual(['email at $.events[0].text', 'card at $.events[0].text']);
+    expect(readFileSync(t.file, 'utf8')).not.toMatch(/maria@gmail|4111 1111/);
+    const s = engine.getSession();
+    (s.dbRef.db as any).users[0].email = 'real.person@gmail.com';
+    const sc = engine.saveScenario(s, { name: 'With PII' });
+    expect(sc.piiRemoved).toEqual(['email at $.users[0].email']);
+    expect(readFileSync(sc.file, 'utf8')).not.toContain('real.person@gmail.com');
+    expect(readFileSync(sc.file, 'utf8')).toContain('ledgerly.test'); // fake test-domain data stays
+  });
+});

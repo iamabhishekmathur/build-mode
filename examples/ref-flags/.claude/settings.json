@@ -8,5 +8,29 @@
   },
   "enabledMcpjsonServers": [
     "stagecraft"
-  ]
+  ],
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx --no stagecraft hook post-edit"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx --no stagecraft hook pre-bash"
+          }
+        ]
+      }
+    ]
+  }
 }

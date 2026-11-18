@@ -7,6 +7,7 @@ import {
   getPath,
   resolveScenario,
   scenarioSlug,
+  scrub,
   tapeOutline,
   type DbPatch,
   type FaultRule,
@@ -356,10 +357,16 @@ export class Engine {
       ...(s.state.clock ? { clock: s.state.clock } : {}),
       ...(input.includeDb !== false ? { dbSnapshot: s.dbRef.db } : {}),
     };
+    let piiRemoved: string[] = [];
+    if (sc.dbSnapshot !== undefined) {
+      const r = scrub(sc.dbSnapshot);
+      sc.dbSnapshot = r.value;
+      piiRemoved = r.findings.map((f) => `${f.kind} at ${f.path}`);
+    }
     const file = writeJson(this.scenariosDir, input.name, sc);
     this.scenarios[sc.name] = sc;
     s.state.scenario = sc.name;
-    return { file, scenario: sc };
+    return { file, scenario: sc, piiRemoved };
   }
 
   // ---------- tapes ----------
@@ -375,11 +382,14 @@ export class Engine {
     } catch (e) {
       throw new UserError((e as Error).message);
     }
+    // NFR-103: tapes may come from real sessions; never write PII to the repo.
+    const { value: clean, findings } = scrub(tape as unknown as Json);
+    tape = clean as unknown as Tape;
     mkdirSync(this.tapesDir, { recursive: true });
     const file = join(this.tapesDir, `${tape.id}.json`);
     writeFileSync(file, JSON.stringify({ $schema: 'https://stagecraft.dev/schema/tape.v1.json', ...tape }, null, 2) + '\n');
     this.tapes[tape.id] = tape;
-    return { file };
+    return { file, piiRemoved: findings.map((f) => `${f.kind} at ${f.path}`) };
   }
 
   loadTape(s: Session, id: string, at?: string, autoplay?: boolean): TapeStatus {

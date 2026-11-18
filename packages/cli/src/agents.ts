@@ -67,6 +67,16 @@ function claudeSettings(root: string, repos: ResolvedRepo[]): string {
   if (dirs.length) perms.additionalDirectories = uniq([...(perms.additionalDirectories ?? []), ...dirs]);
   cur.permissions = perms;
   cur.enabledMcpjsonServers = uniq([...(cur.enabledMcpjsonServers ?? []), 'stagecraft']);
+  // FR-306: design-system check after each edit; block risky commits and plain `npx stagecraft`.
+  const hooks = cur.hooks ?? {};
+  const addHook = (event: string, matcher: string, command: string) => {
+    const list: any[] = hooks[event] ?? [];
+    if (!list.some((h) => (h.hooks ?? []).some((x: any) => x.command === command))) list.push({ matcher, hooks: [{ type: 'command', command }] });
+    hooks[event] = list;
+  };
+  addHook('PostToolUse', 'Edit|Write|MultiEdit', 'npx --no stagecraft hook post-edit');
+  addHook('PreToolUse', 'Bash', 'npx --no stagecraft hook pre-bash');
+  cur.hooks = hooks;
   return JSON.stringify(cur, null, 2) + '\n';
 }
 
