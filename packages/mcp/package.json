@@ -15,6 +15,7 @@
     "@stagecraft/core": "0.1.0",
     "@stagecraft/server": "0.1.0",
     "zod": "^3.25.0",
-    "@stagecraft/checks": "0.1.0"
+    "@stagecraft/checks": "0.1.0",
+    "@stagecraft/github": "0.1.0"
   }
 }

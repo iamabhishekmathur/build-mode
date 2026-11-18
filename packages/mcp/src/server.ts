@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { validateTape } from '@stagecraft/core';
+import { registerGithubTools } from '@stagecraft/github';
 import { checkA11y, checkComponents, checkFast, checkHandoff, checkVisual, describePr, renderMatrix, VIEWPORTS } from '@stagecraft/checks';
 import { readFileSync as readFileSyncFs } from 'node:fs';
 import { detect, findConfig, loadConfig, resolveWorkspace, settle, workspaceStatus } from '@stagecraft/server';
@@ -66,6 +67,9 @@ export async function createMcpServer(opts: McpOptions = {}) {
         return fail((e as Error).message);
       }
     }) as any);
+
+  // GitHub: draft PRs, preview comments, branch-from, ready-for-review behind the gate. No merge tool.
+  registerGithubTools(tool as any, { cwd: opts.cwd });
 
   tool('setup_detect', 'Detect the repo stack (framework, package manager, dev command, router, API style, flags, design system, Storybook).', {}, async () => {
     if (!root) throw new Error('No stagecraft.config.ts found. Run "npx --no stagecraft init" first.');
