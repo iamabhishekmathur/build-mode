@@ -92,6 +92,8 @@ export interface StagecraftConfig<DB = any> {
   tapes?: TapeTransportConfig;
   /** `session` (default): each session has its own DB. `shared`: one DB for everyone. */
   dbMode?: DbMode;
+  /** Share links (FR-1401..1405). `publicLinks: false` blocks new links and stops existing ones at once. */
+  sharing?: { publicLinks?: boolean; defaultExpiry?: string };
   /** Multi-repo workspace: other repos that make up the product. */
   workspace?: WorkspaceConfig;
   /** What to do with requests to API origins that have no handler. Default `404`. */

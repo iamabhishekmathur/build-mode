@@ -38,6 +38,8 @@ export interface Session {
   player: TapePlayer | null;
   createdAt: number;
   lastSeen: number;
+  /** Set for sessions opened from a share link: a viewer can explore and comment, not change files. */
+  viewer?: { shareId: string };
 }
 
 export interface PatchInput {

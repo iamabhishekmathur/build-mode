@@ -8,3 +8,4 @@ export * from './dev-env.ts';
 export * from './workspace.ts';
 export * from './settle.ts';
 export * from './feedback.ts';
+export * from './share.ts';

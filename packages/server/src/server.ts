@@ -11,6 +11,23 @@ import type { TapeClient } from './tape-player.ts';
 import { comparePage } from './compare.ts';
 import { resolveWorkspace } from './workspace.ts';
 import { FeedbackStore, type Actor } from './feedback.ts';
+import { ShareStore } from './share.ts';
+
+const shareStores = new WeakMap<Engine, ShareStore>();
+export function sharesFor(engine: Engine): ShareStore {
+  let s = shareStores.get(engine);
+  if (!s) shareStores.set(engine, (s = new ShareStore(engine)));
+  return s;
+}
+
+/** Requests from this machine. Everything else must belong to a share-link viewer session. */
+export function isLocal(req: IncomingMessage): boolean {
+  const a = req.socket.remoteAddress ?? '';
+  return a === '127.0.0.1' || a === '::1' || a === '::ffff:127.0.0.1';
+}
+
+/** API routes a share-link viewer may not use (FR-1404: explore and comment, never change files or config). */
+const VIEWER_DENY = new Set(['POST /scenarios', 'POST /tapes', 'POST /reload', 'POST /navigate', 'POST /mockdb/seed', 'POST /shares', 'GET /shares']);
 
 const feedbackStores = new WeakMap<Engine, FeedbackStore>();
 /** When each session's clock was set, so scenario time runs forward like real time. */
@@ -37,6 +54,8 @@ export interface ServerOptions {
   host?: string;
   /** Override the dev server URL from config. */
   devUrl?: string;
+  /** Tests only: treat requests carrying `x-stagecraft-test-remote: 1` as remote. */
+  simulateRemote?: boolean;
   /** Route workspace app mounts (default true). Port-mounted app servers pass false. */
   mounts?: boolean;
   log?: (m: string) => void;
@@ -188,9 +207,44 @@ export class StagecraftServer {
     return this.engine.getSession(id ?? 'main');
   }
 
+  local(req: IncomingMessage): boolean {
+    if (this.opts.simulateRemote && req.headers['x-stagecraft-test-remote'] === '1') return false;
+    return isLocal(req);
+  }
+
+  /** Session id named by a request, without creating a session. */
+  private requestedSessionId(req: IncomingMessage, url: URL): string | undefined {
+    const id = (req.headers[SESSION_HEADER] as string | undefined) ?? url.searchParams.get('__sc_sid') ?? url.searchParams.get('__sc_session') ?? undefined;
+    if (id) return id;
+    try {
+      return new URL(req.headers.referer ?? '').searchParams.get('__sc_session') ?? undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private deny(res: ServerResponse, status: number, msg: string, html: boolean) {
+    if (!html) return sendJson(res, status, { error: msg });
+    res.writeHead(status, { 'content-type': 'text/html; charset=utf-8' });
+    res.end(`<!doctype html><title>Stagecraft</title><body style="font:16px system-ui;padding:40px;max-width:520px"><h1>Preview not available</h1><p>${msg.replace(/</g, '&lt;')}</p></body>`);
+  }
+
   private async handle(req: IncomingMessage, res: ServerResponse) {
     const url = new URL(req.url ?? '/', 'http://local');
     const path = url.pathname;
+    const wantsHtml = /text\/html/.test(String(req.headers.accept ?? ''));
+    if (path.startsWith('/__stagecraft/s/')) return this.shareEntry(req, res, url);
+    // Remote clients only reach viewer sessions from valid share links.
+    const shares = sharesFor(this.engine);
+    const sid = this.requestedSessionId(req, url);
+    const named = sid ? this.engine.sessions.get(sid) : undefined;
+    if (!this.local(req) && path !== '/__stagecraft/runtime.js') {
+      if (!named?.viewer) return this.deny(res, 403, 'This Stagecraft preview is private. Ask the owner for a share link.', wantsHtml);
+    }
+    if (named?.viewer) {
+      const problem = shares.viewerProblem(named);
+      if (problem) return this.deny(res, 410, problem, wantsHtml);
+    }
     if (path === '/__stagecraft/runtime.js') {
       this.runtimeJs ??= runtimeBundle();
       res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' });
@@ -317,6 +371,12 @@ export class StagecraftServer {
 
   private upgrade(req: IncomingMessage, socket: net.Socket, head: Buffer) {
     const url = new URL(req.url ?? '/', 'http://local');
+    if (!this.local(req)) {
+      // Remote viewers get tape sockets for their own session only; no dev-server sockets (HMR).
+      const sid = url.searchParams.get('__sc_sid');
+      const v = sid ? this.engine.sessions.get(sid) : undefined;
+      if (!v?.viewer || sharesFor(this.engine).viewerProblem(v)) return socket.destroy();
+    }
     const tapeCfg = this.engine.config.tapes;
     if (tapeCfg?.transport === 'websocket' && matchRoute([compile(tapeCfg.endpoint.replace(/^\S+/, '*'), 1)], 'GET', url.pathname)) {
       const s = this.sessionFor(req, url);
@@ -332,7 +392,8 @@ export class StagecraftServer {
       });
       return;
     }
-    // Pass everything else (HMR) through to the dev server.
+    // Pass everything else (HMR) through to the dev server. Local clients only.
+    if (!this.local(req)) return socket.destroy();
     const up = this.upstreamFor(url.pathname);
     const target = net.connect(Number(up.port || 80), up.hostname, () => {
       // Dev servers (Next.js) check Host and Origin on the HMR socket: present ourselves as same-origin.
@@ -361,7 +422,12 @@ export class StagecraftServer {
     const e = this.engine;
     const sp = url.searchParams;
     let s: Session;
-    const want = sp.get('__sc_session');
+    let want = sp.get('__sc_session');
+    if (!this.local(req)) {
+      // A remote viewer stays in its own session.
+      const own = want ? this.engine.sessions.get(want) : undefined;
+      want = own?.viewer ? want : null;
+    }
     if (want === 'fork' || want?.startsWith('fork:')) s = e.fork(want.split(':')[1] ?? 'main');
     else if (want && !e.hasSession(want)) s = e.fork('main');
     else s = want ? e.getSession(want) : this.sessionFor(req, url);
@@ -462,6 +528,8 @@ export class StagecraftServer {
     const s = this.sessionFor(req, url);
     const method = req.method ?? 'GET';
     const key = `${method} ${route}`;
+    if (s.viewer && (VIEWER_DENY.has(key) || route.startsWith('/shares'))) throw new UserError('Viewers can explore and comment, but not change files or settings.', 403);
+    if (route === '/shares' || route.startsWith('/shares/')) return this.sharesApi(req, res, route, s);
     if (route === '/feedback' || route.startsWith('/feedback/')) return this.feedbackApi(req, res, url, route, s);
     switch (key) {
       case 'GET /boot':
@@ -560,6 +628,42 @@ export class StagecraftServer {
       default:
         throw new UserError(`No Stagecraft API route ${key}`, 404);
     }
+  }
+
+  private async sharesApi(req: IncomingMessage, res: ServerResponse, route: string, s: Session) {
+    const store = sharesFor(this.engine);
+    const method = req.method ?? 'GET';
+    const id = route.split('/')[2];
+    if (method === 'GET' && !id) return sendJson(res, 200, store.list());
+    if (method === 'POST' && !id) {
+      const body = await readJson(req);
+      const share = store.create(s, body);
+      return sendJson(res, 200, { id: share.id, url: `/__stagecraft/s/${share.token}`, expiresAt: share.expiresAt, password: !!share.password });
+    }
+    if (method === 'DELETE' && id) return sendJson(res, 200, { id: store.revoke(id).id, revoked: true });
+    throw new UserError(`No share route ${method} ${route}`, 404);
+  }
+
+  /** Opening a share link: check it, ask for the password if any, then start a viewer session (FR-1403). */
+  private async shareEntry(req: IncomingMessage, res: ServerResponse, url: URL) {
+    const store = sharesFor(this.engine);
+    const token = url.pathname.slice('/__stagecraft/s/'.length).split('/')[0]!;
+    const share = store.byToken(token);
+    const problem = store.problem(share);
+    if (problem) return this.deny(res, share ? 410 : 404, problem, true);
+    let password: string | undefined;
+    if (req.method === 'POST') password = new URLSearchParams(await readBody(req)).get('password') ?? undefined;
+    if (!store.checkPassword(share!, password)) {
+      res.writeHead(password ? 401 : 200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+      return res.end(`<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><title>Password needed</title></head>
+<body style="font:16px system-ui;padding:40px;max-width:420px"><h1>This preview needs a password</h1>${password ? '<p role="alert">That password is not right.</p>' : ''}
+<form method="post"><label>Password <input type="password" name="password" autofocus required></label> <button>Open</button></form></body></html>`);
+    }
+    const v = store.open(share!);
+    const to = new URL(share!.path, 'http://x');
+    to.searchParams.set('__sc_session', v.id);
+    res.writeHead(303, { location: to.pathname + to.search, 'cache-control': 'no-store', 'x-robots-tag': 'noindex' });
+    res.end();
   }
 
   /** Feedback (FR-901..905). The MCP server sends `x-stagecraft-actor: agent`; the browser panel is a person. */

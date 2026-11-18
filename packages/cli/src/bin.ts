@@ -9,6 +9,7 @@ import { dev } from './dev.ts';
 import { init } from './init.ts';
 import { loadRepos, workspaceCommand } from './workspace.ts';
 import { checkCommand, describeCommand, matrixCommand } from './checks.ts';
+import { shareCommand } from './share.ts';
 
 const HELP = `stagecraft — prototype in the real product on mock data
 
@@ -30,6 +31,8 @@ Usage:
   stagecraft matrix <route> [--viewports desktop,phone] [--cells cells.json]
                                   Grid of screenshots across states/personas/viewports
   stagecraft describe [--gate]    PR description: screens, states, scenarios, tapes, backend work, gate
+  stagecraft share [path] [--expires 7d] [--password p] | share list | share revoke <id>
+                                  Share link to a frozen copy of the current view (viewers: explore + comment)
   stagecraft mcp                  Run the MCP server on stdio (used by Claude Code, Codex, Cursor)
 `;
 
@@ -73,6 +76,8 @@ async function main() {
       return matrixCommand(cwd, sub, rest, log);
     case 'describe':
       return describeCommand(cwd, args, log);
+    case 'share':
+      return shareCommand(cwd, sub, rest, log);
     case 'agents': {
       const { root, repos } = await loadRepos(cwd);
       if (sub === 'sync') {
