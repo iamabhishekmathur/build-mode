@@ -1,0 +1,94 @@
+{
+  "taskId": "T-HO-01",
+  "title": "Handoff: keep the winning variant, pass the gate, write the PR description",
+  "category": "state",
+  "pass": true,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /settings/agents",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "no variants left in product code",
+      "pass": true
+    },
+    {
+      "id": "cards layout kept",
+      "pass": true
+    },
+    {
+      "id": "handoff gate passes",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "PR description written with backend work and states",
+      "pass": true,
+      "detail": "4304 chars"
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 33,
+    "costUsd": 0.656568,
+    "durationMs": 119190,
+    "toolCalls": 31,
+    "toolsUsed": {
+      "Skill": 1,
+      "ToolSearch": 3,
+      "Bash": 6,
+      "Read": 1,
+      "mcp__stagecraft__variant_list": 1,
+      "Edit": 4,
+      "Grep": 1,
+      "mcp__stagecraft__check_handoff": 1,
+      "mcp__stagecraft__scenario_list": 1,
+      "mcp__stagecraft__mock_endpoints": 1,
+      "mcp__stagecraft__preview_screenshot": 6,
+      "mcp__stagecraft__state_set": 1,
+      "mcp__stagecraft__fault_set": 2,
+      "mcp__stagecraft__pr_describe": 1,
+      "Write": 1
+    },
+    "skillsUsed": [
+      "stagecraft-handoff"
+    ],
+    "screenshots": 6,
+    "permissionDenials": [
+      "Bash: {\"command\":\"cd /home/user/build-mode/tests/.tmp/evals/T-HO-01-mwlx81z8/ref-react-vite/.stagecraft-cache && mkdir -p handoff && cp screenshots/1794994300458-_set"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "The Agent controls prototype is ready for engineering: the page now uses only the cards layout and the handoff checks pass. The PR description is in `.stagecraft-cache/pr.md`. I didn't open a PR or commit anything; the changes are in the working tree.\n\n**What changed**\n- **Variant removed:** in `src/pages/AgentControls.tsx`, the `agent-list-layout` variant and the unused table version are gone. The page renders the cards directly and no longer imports `Variant`.\n- **Spacing fix:** card rows were twice as far apart as columns, because each card's bottom margin was added to the grid gap. I added one rule in `src/styles.css` using existing tokens.\n\n**Checks**\n- **Handoff gate:** build, types, mock-code, variant and component checks all pass, and the mock-code check (`stagecraft doctor`) finds no product code importing from `stagecraft/`.\n- **Lint and tests didn't really run:** the repo has no ESLint config and no test script, so both pass without checking anything. The PR description says so.\n- **Screenshots:** I looked at the page with 2 agents, 14 agents, on a phone-width screen, with no agents and with a server error. I used a separate preview session, so your view wasn't changed.\n\n**Known gaps listed in the PR** (existing behavior, not changed here)\n- When the agent list fails to load, the page shows only the error text: the heading disappears and there's no retry button.\n- Pause/Resume shows nothing while it's working and nothing if it fails.\n- \"Connect an agent\" does nothing yet.\n- The agents API address is hard-coded in `src/api.ts` to a placeholder (`https://api.ledgerly.example`). Engineering should move it to environment config.\n\nThe PR description lists the two endpoints the backend must build for this page, `GET /api/agents` and `PATCH /api/agents/:id`, with their data shapes. It points to the screenshots as local files in `.stagecraft-cache/screenshots/`; they get uploaded when the PR is opened.\n\nWhen you want the PR opened, I'll run `npx --no stagecraft pr open --body-file .stagecraft-cache/pr.md` and post the preview comment.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": [
+      "src/pages/AgentControls.tsx",
+      "src/styles.css"
+    ]
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-HO-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-HO-01/_settings_agents.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-HO-01/_settings_agents.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-HO-01-mwlx81z8",
+  "startedAt": "2026-11-18T09:30:37.700Z"
+}

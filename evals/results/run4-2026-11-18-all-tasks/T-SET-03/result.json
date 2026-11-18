@@ -1,0 +1,147 @@
+{
+  "taskId": "T-SET-03",
+  "title": "Messy setup: SSO redirect on load + required env var",
+  "category": "setup",
+  "pass": true,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /payments",
+      "pass": true
+    },
+    {
+      "id": "renders /onboarding",
+      "pass": true
+    },
+    {
+      "id": "renders /settings/agents",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "fake value for the required env var",
+      "pass": true
+    },
+    {
+      "id": "no SSO redirect (session mocked)",
+      "pass": true,
+      "detail": "Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nPriya Raman · admin\nAssistant\nNorthwind Studio\nBalance\n\n$48,210.55\n\nMonthly limit\n\n$14,382.40 of $25,000.00 (58"
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 32,
+    "costUsd": 0.807364,
+    "durationMs": 142154,
+    "toolCalls": 30,
+    "toolsUsed": {
+      "Skill": 1,
+      "Bash": 6,
+      "Write": 3,
+      "Read": 2,
+      "Edit": 2,
+      "ToolSearch": 2,
+      "mcp__stagecraft__session_get": 1,
+      "mcp__stagecraft__dev_logs": 1,
+      "mcp__stagecraft__dev_restart": 1,
+      "mcp__stagecraft__preview_screenshot": 8,
+      "mcp__stagecraft__persona_set": 1,
+      "mcp__stagecraft__mock_endpoints": 1,
+      "mcp__stagecraft__state_set": 1
+    },
+    "skillsUsed": [
+      "stagecraft-setup"
+    ],
+    "screenshots": 8,
+    "permissionDenials": [
+      "Bash: {\"command\":\"for f in stagecraft/seed.ts stagecraft/mocks.ts stagecraft/states.ts .env.stagecraft package.json vite.config.ts src/*.ts* src/pages/*; do echo \\\"==",
+      "Bash: {\"command\":\"python3 - <<'EOF'\\np='stagecraft.config.ts'; s=open(p).read()\\ns=s.replace(\\\"apiOrigins: ['/api'],\\\",\\\"apiOrigins: ['/api', 'https://api.ledgerly.ex"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "The app now runs on fake data. Open **http://localhost:4400** (the Stagecraft address, not the app's own port 5174). Home, Payments, Onboarding and Agent controls all load, and you can switch between **Admin** and **Employee** in the Stagecraft panel.\n\n**Why it didn't show up before:**\n- The app refused to start because it needed an analytics key. I added a fake one in `.env.stagecraft`.\n- The app checks for a login when it opens. With no answer, it sent you to the company sign-in page. That check now gets a fake \"signed in\" reply.\n- None of the data requests had fake answers, so every page would have been empty or broken.\n- Agent controls fetches its data from a separate address (`api.ledgerly.example`). That address is now faked too.\n\n**Who you can sign in as:**\n- **Admin – Priya Raman.** She sees Approve and Reject on payments waiting for approval, and has finished onboarding.\n- **Employee – Marcus Chen.** He sees \"Waiting for an admin\" on those payments, and is on onboarding step 2 of 4.\n\n**The fake data:** the company is \"Northwind Studio\", with a $48,210.55 balance and $14,382 of a $25,000 monthly limit used. There are 8 payments (two waiting for approval, others paid, approved or rejected) and 3 AI agents (two active, one paused). Approving, rejecting, finishing an onboarding step and pausing or resuming an agent all stick while you click around.\n\n**Other things you can switch in the panel:**\n- **Account:** Active, Frozen, Over monthly limit, Under review. Each shows its banner.\n- **Payments** and **Agents:** a version with data and an empty version.\n- **Two display options:** a sidebar instead of the top menu, and how Home shows the monthly limit.\n\nI took screenshots of all four pages as admin, and of Payments, Onboarding, Agent controls and Home (\"Over monthly limit\") as employee. All showed real data with no errors. The Stagecraft health check now finds only one request without fake data: the Assistant chat. When I clicked through the pages, every request the app made got a fake answer.\n\n**Two things that still need you:**\n1. **The Assistant chat panel opens empty.** Its replies come from scripted conversations, and there aren't any yet. I can write one, for example the assistant asking for a payment approval.\n2. **An employee can still click \"Pause\" on Agent controls.** I set the fake data so only an admin can change agents, and the click is refused, but the page doesn't show any message. Should employees not see the button, or see an explanation? I can change the screen once you decide.\n\nI haven't committed anything.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": [
+      ".agents/skills/stagecraft-add-state/SKILL.md",
+      ".agents/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".agents/skills/stagecraft-build-screen/SKILL.md",
+      ".agents/skills/stagecraft-create-variant/SKILL.md",
+      ".agents/skills/stagecraft-handle-feedback/SKILL.md",
+      ".agents/skills/stagecraft-handoff/SKILL.md",
+      ".agents/skills/stagecraft-make-tape/SKILL.md",
+      ".agents/skills/stagecraft-self-check/SKILL.md",
+      ".agents/skills/stagecraft-setup/SKILL.md",
+      ".claude/settings.json",
+      ".claude/skills/stagecraft-add-state/SKILL.md",
+      ".claude/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".claude/skills/stagecraft-build-screen/SKILL.md",
+      ".claude/skills/stagecraft-create-variant/SKILL.md",
+      ".claude/skills/stagecraft-handle-feedback/SKILL.md",
+      ".claude/skills/stagecraft-handoff/SKILL.md",
+      ".claude/skills/stagecraft-make-tape/SKILL.md",
+      ".claude/skills/stagecraft-self-check/SKILL.md",
+      ".claude/skills/stagecraft-setup/SKILL.md",
+      ".codex/config.toml",
+      ".cursor/mcp.json",
+      ".cursor/rules/stagecraft.mdc",
+      ".cursor/skills/stagecraft-add-state/SKILL.md",
+      ".cursor/skills/stagecraft-apply-figma-frame/SKILL.md",
+      ".cursor/skills/stagecraft-build-screen/SKILL.md",
+      ".cursor/skills/stagecraft-create-variant/SKILL.md",
+      ".cursor/skills/stagecraft-handle-feedback/SKILL.md",
+      ".cursor/skills/stagecraft-handoff/SKILL.md",
+      ".cursor/skills/stagecraft-make-tape/SKILL.md",
+      ".cursor/skills/stagecraft-self-check/SKILL.md",
+      ".cursor/skills/stagecraft-setup/SKILL.md",
+      ".env.stagecraft",
+      ".mcp.json",
+      "AGENTS.md",
+      "CLAUDE.md",
+      "stagecraft.config.ts",
+      "stagecraft.detect.json",
+      "stagecraft/.setup-started",
+      "stagecraft/agents.md",
+      "stagecraft/mocks.ts",
+      "stagecraft/scenarios/.gitkeep",
+      "stagecraft/seed.ts",
+      "stagecraft/skills/add-state/SKILL.md",
+      "stagecraft/skills/apply-figma-frame/SKILL.md",
+      "stagecraft/skills/build-screen/SKILL.md",
+      "stagecraft/skills/create-variant/SKILL.md",
+      "stagecraft/skills/handle-feedback/SKILL.md",
+      "stagecraft/skills/handoff/SKILL.md",
+      "stagecraft/skills/make-tape/SKILL.md",
+      "stagecraft/skills/self-check/SKILL.md",
+      "stagecraft/skills/setup/SKILL.md",
+      "stagecraft/states.ts",
+      "stagecraft/tapes/.gitkeep"
+    ]
+  },
+  "doctorWarnings": [
+    "Endpoints in code with no mock:\n    /api/assistant/stream  (src/Assistant.tsx)"
+  ],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-SET-03/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-SET-03/_payments.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-SET-03/_onboarding.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-SET-03/_settings_agents.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-SET-03/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-SET-03-mwlxn17q",
+  "startedAt": "2026-11-18T09:42:16.550Z"
+}

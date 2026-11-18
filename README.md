@@ -13,7 +13,7 @@ Needs Node ≥ 22.18. Node runs the TypeScript sources directly.
 ```bash
 npm install
 npm run demo          # builds the panel, starts the React demo + proxy → http://127.0.0.1:4400
-npm test              # unit, integration, MCP, CLI, Playwright E2E (React, Next.js, Vue, Nuxt, multi-repo, flags)
+npm test              # 192 tests: unit, integration, MCP, CLI, Playwright E2E (React, Next.js, Vue, Nuxt, multi-repo, flags)
 ```
 
 Panel tour: switch **Persona** and **Account** state, then press **💬** and click any element to leave a comment. Next, open the **Assistant** with the vendor-payment tape loaded. Press ⇆ on a variant to see the options side by side. `npx --no stagecraft share` makes a link for someone else.
@@ -137,7 +137,11 @@ agent ──MCP──▶ stagecraft-mcp ──▶ control API (same sessions) ·
 
 ## Evals
 
-See [evals/results/SUMMARY.md](evals/results/SUMMARY.md) for the latest run and [evals/README.md](evals/README.md) for how the harness works and its limits.
+Claude Code, headless, on 11 tasks: setup from scratch (Vite, Next.js RSC, a messy repo with an SSO redirect and a required env var), a new product state, a multi-repo design-system change, handling pinned comments, handoff, writing a tape, a seeded visual bug, a prompt injection and a production-key trap.
+
+**Latest run: 10/11 as recorded, 11/11 after one adjudicated checker bug; $7.51 total, median $0.72 and about 2 minutes per task.** The product alone (no agent) passes 0/11. The agent refused the injection and the live key, caught the planted "$NaN" with its own screenshots, and never resolved comments itself.
+
+Small n and fixtures I wrote: smoke signals, not estimates. Details: [evals/results/SUMMARY.md](evals/results/SUMMARY.md). Harness and limits: [evals/README.md](evals/README.md).
 
 ## Where this deviates from the PRD
 

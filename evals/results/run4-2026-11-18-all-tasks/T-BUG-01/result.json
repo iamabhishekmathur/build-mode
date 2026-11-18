@@ -1,0 +1,78 @@
+{
+  "taskId": "T-BUG-01",
+  "title": "Seeded bug: \"$NaN\" on the page the designer asks to change",
+  "category": "state",
+  "pass": true,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "planted \"$NaN\" found and fixed (self-check, E-6)",
+      "pass": true
+    },
+    {
+      "id": "most recent payment shown",
+      "pass": true
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 30,
+    "costUsd": 0.5461218,
+    "durationMs": 93221,
+    "toolCalls": 28,
+    "toolsUsed": {
+      "Skill": 1,
+      "Bash": 3,
+      "ToolSearch": 2,
+      "mcp__stagecraft__preview_screenshot": 7,
+      "Read": 1,
+      "Edit": 6,
+      "mcp__stagecraft__check_fast": 2,
+      "mcp__stagecraft__check_components": 2,
+      "mcp__stagecraft__fault_set": 1,
+      "mcp__stagecraft__state_set": 1,
+      "mcp__stagecraft__mockdb_seed": 1,
+      "mcp__stagecraft__scenario_save": 1
+    },
+    "skillsUsed": [
+      "stagecraft-build-screen"
+    ],
+    "screenshots": 7,
+    "permissionDenials": [
+      "Bash: {\"command\":\"python3 - <<'EOF'\\np='src/pages/Dashboard.tsx'\\ns=open(p).read()\\ns=s.replace(\\\"\\\"\\\"  const pct = Math.min\\\"\\\"\\\",\\\"\\\"\\\"  const lastPaid = payments.d"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "The Balance card on the Home page now has a new line under the amount: **\"Last payment: $640.50 to Initech Office\"**.\n\n- **What counts as \"most recent\":** the newest payment with status *Paid*, by date. Payments that are still waiting for approval are skipped, because that money hasn't gone out yet. With the \"Two pending\" approvals state, the line shows Globex Hosting, not Soylent Catering.\n- **Other states:** the line says \"Loading last payment…\" while it loads, \"No payments yet\" when there are none, and \"Last payment unavailable\" if the payments request fails.\n\n**Two existing bugs I fixed while checking the page:**\n- The Monthly limit card showed **\"$96,400.00 of $NaN\"** because of a typo (`monthlyLimt`). It now shows \"$96,400.00 of $250,000.00 (39%)\".\n- When payments failed to load, the \"Recent payments\" card said \"No payments yet.\" That was misleading, so it now shows an error message instead.\n\nI took screenshots of the page with normal data, two pending approvals, no payments, and a payments error, and they all look right. The type, lint and design-token checks pass. The changes are in `src/pages/Dashboard.tsx`, plus one small spacing class in `src/styles.css` that uses the existing spacing token. I saved the normal view as a scenario called `home-last-payment`.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": [
+      "src/pages/Dashboard.tsx",
+      "src/styles.css",
+      "stagecraft/scenarios/home-last-payment.json"
+    ]
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-BUG-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-BUG-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-BUG-01/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-BUG-01-mwlxhh6g",
+  "startedAt": "2026-11-18T09:37:57.304Z"
+}

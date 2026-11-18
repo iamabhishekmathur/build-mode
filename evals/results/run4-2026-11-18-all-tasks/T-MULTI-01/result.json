@@ -1,0 +1,109 @@
+{
+  "taskId": "T-MULTI-01",
+  "title": "Change the design-system repo and use it in the app (4 repos)",
+  "category": "multi-repo",
+  "pass": true,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /admin/",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "Pill added to the library repo",
+      "pass": true
+    },
+    {
+      "id": "app imports Pill from @acme/ui (no local copy)",
+      "pass": true,
+      "detail": "imports=true localCopy=false"
+    },
+    {
+      "id": "categories rendered on the dashboard",
+      "pass": true,
+      "detail": "Larkspur Coffee Active\nCora Customer · owner\nPayments\nBean Brokers: $820\nSupplies\nMill & Co: $145\nSupplies\nBrewline Espresso Machines: $2390\nEquipment\nHarbor Street Properties: $3100\nRent\nCityside Pow"
+    },
+    {
+      "id": "API repo untouched",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "changed repos share one branch",
+      "pass": true,
+      "detail": "acme-web@proto/prototype/payment-category-pill, acme-ui@proto/prototype/payment-category-pill"
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 42,
+    "costUsd": 0.8395716,
+    "durationMs": 137161,
+    "toolCalls": 39,
+    "toolsUsed": {
+      "Skill": 2,
+      "Bash": 5,
+      "ToolSearch": 3,
+      "mcp__stagecraft__workspace_status": 2,
+      "mcp__stagecraft__state_catalog": 1,
+      "mcp__stagecraft__components_guide": 1,
+      "Glob": 1,
+      "Read": 6,
+      "Edit": 6,
+      "mcp__stagecraft__check_fast": 1,
+      "mcp__stagecraft__check_components": 1,
+      "mcp__stagecraft__check_visual": 3,
+      "mcp__stagecraft__check_a11y": 1,
+      "mcp__stagecraft__dev_logs": 1,
+      "mcp__stagecraft__mockdb_query": 2,
+      "mcp__stagecraft__mockdb_reset": 1,
+      "mcp__stagecraft__scenario_save": 1,
+      "mcp__stagecraft__check_handoff": 1
+    },
+    "skillsUsed": [
+      "stagecraft-build-screen",
+      "stagecraft-self-check"
+    ],
+    "screenshots": 0,
+    "permissionDenials": [
+      "Bash: {\"command\":\"cd .. && ls; for r in acme-web acme-ui acme-admin acme-api; do echo \\\"== $r\\\"; (cd $r && git status -sb | head -3 && git ls-files | grep -v node_mod",
+      "Bash: {\"command\":\"cd /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlx1fdg; for r in acme-web acme-ui acme-admin acme-api; do echo \\\"== $r\\\"; git -C $r ls-files ",
+      "Bash: {\"command\":\"cd /home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlx1fdg && git -C acme-web ls-files && echo == && git -C acme-ui ls-files && echo == && git -C"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "I've added a reusable **Pill** component to the design system and used it on the dashboard: each payment now shows its category as a pill. The handoff checks pass, but I haven't committed anything or opened PRs.\n\n**What changed**\n- **Design system (`acme-ui`):** `Pill` is exported from `@acme/ui`, so any team can import it. Usage is `<Pill>Supplies</Pill>`, and there's an optional `tone` (neutral, brand, ok, warn, bad) that reuses the existing color tokens. A code comment says to use Pill for tags and categories and the existing StatusBadge for account status, so the two don't get mixed up. The component guide now lists Pill.\n- **Dashboard (`acme-web`):** each payment row shows its category in a neutral Pill next to the vendor and amount.\n- **Fake data:** I added categories to the two existing payments (both Supplies) and four new payments so the list looks realistic: an espresso machine (Equipment), rent, utilities and a repair (Maintenance).\n- **Saved scenario:** \"payment-categories\" opens the dashboard with this data.\n\n**What the visual checks found**\n- **The first check passed, but wrongly.** It passed while still showing the old data with no pills. I looked at the screenshots, reset the mock data, and checked again.\n- **Contrast fix:** that second run caught the neutral pill's grey text on its grey fill falling just below accessibility contrast (4.18 where 4.5 is needed). I changed it to the main text color and it now passes.\n- **Final check:** clean on desktop, phone (375px wide), the active, frozen and in-review account states, the support persona, and dark mode. On phone, long vendor names wrap onto two lines and the pill sits at the right edge, which looks fine. The accessibility check also passed (I ran it before the contrast fix; the final visual check confirms contrast now passes).\n\n**For engineering**\n- **The API has no `category` field yet.** The API repo is read-only for me, so categories exist only in the mock data. Backend work is needed before this can ship; until then the pill simply doesn't appear.\n- **Payments list states:** the list had no empty, loading or error handling before this change, and I didn't add any. Worth doing in the same PR.\n- **Untested:** this repo has no type checker, linter or tests set up, so those steps were skipped.\n- **Don't commit:** the checks left screenshot files in `.stagecraft-cache/`; leave them out of the PRs.\n- **Two PRs are needed:** one for `acme-ui` and one for `acme-web`, both on branch `proto/prototype/payment-category-pill`, linked to each other. The admin app wasn't changed.\n\nShould I run the handoff step now? It writes the PR descriptions and opens the two linked PRs; marking them ready for engineering stays with you.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "acme-web": [
+      "src/main.tsx",
+      "stagecraft/component-guide.md",
+      "stagecraft/seed.ts",
+      "stagecraft/scenarios/payment-categories.json"
+    ],
+    "acme-ui": [
+      "src/index.tsx"
+    ],
+    "acme-admin": [],
+    "acme-api": []
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-MULTI-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-MULTI-01/_admin_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-MULTI-01/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-MULTI-01-mwlx1fdg",
+  "startedAt": "2026-11-18T09:25:28.468Z"
+}

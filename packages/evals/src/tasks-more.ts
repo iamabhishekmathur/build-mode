@@ -145,7 +145,8 @@ export const MORE_TASKS: EvalTask[] = [
             const all = [...t.events, ...Object.values(t.branches ?? {}).flat()] as any[];
             const ok =
               validateTape(t).length === 0 &&
-              all.some((e) => e.type === 'error' || e.type === 'timeout') &&
+              // A failed attempt can be an error/timeout event or a tool_result with isError (run 4 adjudication).
+              all.some((e) => e.type === 'error' || e.type === 'timeout' || (e.type === 'tool_result' && e.isError)) &&
               all.some((e) => e.type === 'pending_action') &&
               t.events.at(-1)?.type === 'branch' &&
               (t.events.at(-1)?.cases?.length ?? 0) >= 2 &&

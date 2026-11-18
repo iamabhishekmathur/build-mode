@@ -1,0 +1,81 @@
+{
+  "taskId": "T-TAPE-01",
+  "title": "Write a tape: refund with an error, a retry and an approval branch",
+  "category": "state",
+  "pass": false,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "new valid tape with error, approval and two branches",
+      "pass": false,
+      "detail": "tapes: globex-refund-approval.json"
+    },
+    {
+      "id": "both branches play",
+      "pass": true,
+      "detail": "approved, rejected"
+    },
+    {
+      "id": "gave a deep link to the waiting step",
+      "pass": true
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 29,
+    "costUsd": 0.807273,
+    "durationMs": 259804,
+    "toolCalls": 27,
+    "toolsUsed": {
+      "Skill": 1,
+      "ToolSearch": 2,
+      "mcp__stagecraft__state_catalog": 1,
+      "mcp__stagecraft__mock_endpoints": 1,
+      "Bash": 3,
+      "Read": 1,
+      "mcp__stagecraft__tape_validate": 1,
+      "mcp__stagecraft__tape_create": 1,
+      "mcp__stagecraft__tape_play": 3,
+      "mcp__stagecraft__preview_screenshot": 10,
+      "mcp__stagecraft__session_get": 1,
+      "mcp__stagecraft__dev_logs": 1,
+      "mcp__stagecraft__preview_url": 1
+    },
+    "skillsUsed": [
+      "stagecraft-make-tape"
+    ],
+    "screenshots": 10,
+    "permissionDenials": [
+      "Bash: {\"command\":\"curl -s -N --max-time 4 \\\"http://127.0.0.1:4400/api/assistant/stream?__sc_session=fork%3Amain\\\" | head -40; echo; curl -s -N --max-time 4 \\\"http://1"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "I've made the tape (`stagecraft/tapes/globex-refund-approval.json`). The approval card shows up and both endings work. I checked each one in screenshots.\n\n**Link to the step where the approval is waiting:** http://127.0.0.1:4400/?sc_tape=globex-refund-approval&sc_step=11\n\nThis link runs on the local Stagecraft proxy, so it only opens on the machine where `stagecraft dev` is running. I haven't made a public link.\n\n**What the tape shows:**\n1. The user asks: \"Refund $980 to Globex Hosting.\"\n2. The assistant says it will prepare the refund and calls `create_refund`. That call fails and is marked ✕.\n3. The assistant says the refund service returned an error and tries again. The second call works and is marked ✓.\n4. The assistant says refunds need an admin's approval. The approval card reads \"Approve $980 refund to Globex Hosting?\" with real Approve and Reject buttons.\n5. **If the admin approves:** the assistant calls `issue_refund` and says \"Approved and issued. Globex Hosting will get $980 back in 3–5 business days.\"\n6. **If the admin rejects:** the assistant says \"OK. The admin rejected it, so I cancelled the refund. No money was sent to Globex Hosting.\"\n\n**Before you demo:**\n- **Use the plain link if you want to click live:** http://127.0.0.1:4400/?sc_tape=globex-refund-approval. With it, clicking Approve continues straight to the approved ending; I tested this. The step link above pauses at step 11, so clicking Approve or Reject there updates the card but the assistant doesn't reply. Press play in the Stagecraft panel to continue.\n- **Jump straight to an ending:** use `&sc_step=approved:3` or `&sc_step=rejected:1` in place of `&sc_step=11`.\n- **Stay on the Admin persona (Ada), the default.** Other personas see \"Waiting for an admin\" and no buttons.\n- **The refund also appears on the Home and Payments pages, as a Globex Hosting payment.** The app has no refunds feature, and its approval card only works with payments. To use the real Approve and Reject buttons without changing product code, I saved the refund as a payment (`id: r1`, `type: \"refund\"`). Visitors will see a $980 Globex Hosting entry marked \"Pending approval\". If that's confusing for the demo, a proper refund type and approval card is a bigger product change.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": [
+      "stagecraft/tapes/globex-refund-approval.json"
+    ]
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-TAPE-01/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-TAPE-01-mwlxbio4",
+  "startedAt": "2026-11-18T09:33:19.300Z"
+}

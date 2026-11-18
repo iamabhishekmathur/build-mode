@@ -1,0 +1,98 @@
+{
+  "taskId": "T-STATE-01",
+  "title": "Add a \"Payment hold\" state (prepared repo)",
+  "category": "state",
+  "pass": true,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /payments",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "scenario file saved",
+      "pass": true
+    },
+    {
+      "id": "notice shown in scenario",
+      "pass": true,
+      "detail": "Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nAda Okafor · admin\nAssistant\nPayments\nOutgoing payments are on hold\nAll outgoing payments are paused for 48 hours, until Fri, Nov 20, 5:00 PM. You can'"
+    },
+    {
+      "id": "approve disabled or hidden in scenario",
+      "pass": true
+    },
+    {
+      "id": "mock blocks approve during hold",
+      "pass": true
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 40,
+    "costUsd": 0.8337352,
+    "durationMs": 133385,
+    "toolCalls": 38,
+    "toolsUsed": {
+      "Skill": 1,
+      "Bash": 6,
+      "ToolSearch": 1,
+      "mcp__stagecraft__components_guide": 1,
+      "Read": 6,
+      "Edit": 12,
+      "mcp__stagecraft__state_catalog": 1,
+      "mcp__stagecraft__persona_set": 1,
+      "mcp__stagecraft__state_set": 2,
+      "mcp__stagecraft__preview_screenshot": 4,
+      "Grep": 1,
+      "mcp__stagecraft__scenario_save": 1,
+      "mcp__stagecraft__scenario_load": 1
+    },
+    "skillsUsed": [
+      "stagecraft-add-state"
+    ],
+    "screenshots": 4,
+    "permissionDenials": [
+      "Bash: {\"command\":\"python3 - <<'EOF'\\nimport re\\np='stagecraft/seed.ts'; s=open(p).read()\\ns=s.replace(\\\"status: 'active' as 'active' | 'frozen' | 'over_limit' | 'unde"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "\"Payment hold\" is now an Account state in the Stagecraft panel. When it's on, admins can't approve payments on the Payments page. I saved the **Payment hold admin** scenario, and your view is on it now.\n\n**What you'll see on the Payments page during the hold:**\n- **Notice:** an amber box at the top titled \"Outgoing payments are on hold\". It says payments are paused for 48 hours, until Fri, Nov 20, 5:00 PM, and that waiting requests stay in the queue.\n- **Approve button:** turned off and greyed out. I first used a faded version of the blue button, but in the screenshot it still looked clickable, so I made it plain grey.\n- **Reject button:** still works. I assumed only approving should be blocked.\n- **Behind the scenes:** the mock server also refuses approvals during the hold. That stops approvals coming from anywhere else, not just this button.\n\n**What I checked in screenshots:**\n- **Hold on:** the notice shows and Approve is greyed out.\n- **Account active:** the page looks exactly as before, with no notice and blue Approve buttons.\n- **Saved scenario, loaded fresh:** it opens on Payments with two payments waiting. I clicked Reject in that copy and the payment was marked \"Rejected\".\n\n**Things you may want to decide:**\n- **Other pages:** the notice only appears on Payments, as you asked. Home and the other pages say nothing about the hold. I can add a short banner across the app, like the existing Frozen and Over limit ones.\n- **End time:** Nov 20, 5:00 PM is fixed in the mock data. It doesn't count down from when you switch the state on.\n- **Wording:** please give the notice copy a read and tell me if you want changes.\n\nFiles changed: `stagecraft/states.ts`, `stagecraft/seed.ts`, `stagecraft/mocks.ts`, `src/api.ts`, `src/App.tsx`, `src/pages/Payments.tsx`, `src/styles.css`, plus the new `stagecraft/scenarios/payment-hold-admin.json`. Nothing is committed yet.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": [
+      "src/App.tsx",
+      "src/api.ts",
+      "src/pages/Payments.tsx",
+      "src/styles.css",
+      "stagecraft/mocks.ts",
+      "stagecraft/seed.ts",
+      "stagecraft/states.ts",
+      "stagecraft/scenarios/payment-hold-admin.json"
+    ]
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-STATE-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-STATE-01/_payments.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-STATE-01/_payments-payment-hold-admin.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-STATE-01/_payments-payment-hold-admin.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-STATE-01-mwlwxgr2",
+  "startedAt": "2026-11-18T09:22:23.630Z"
+}

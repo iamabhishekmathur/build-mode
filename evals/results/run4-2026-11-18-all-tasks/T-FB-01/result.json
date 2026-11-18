@@ -1,0 +1,85 @@
+{
+  "taskId": "T-FB-01",
+  "title": "Handle two pinned comments (feedback loop)",
+  "category": "state",
+  "pass": true,
+  "checks": [
+    {
+      "id": "renders /",
+      "pass": true
+    },
+    {
+      "id": "renders /payments",
+      "pass": true
+    },
+    {
+      "id": "no unmocked API calls",
+      "pass": true
+    },
+    {
+      "id": "doctor: no errors",
+      "pass": true
+    },
+    {
+      "id": "typecheck",
+      "pass": true
+    },
+    {
+      "id": "both comments answered by the agent, none resolved by it",
+      "pass": true,
+      "detail": "c001-595b:agent_done, c002-59dq:agent_done"
+    },
+    {
+      "id": "button now says \"Approve payment\"",
+      "pass": true,
+      "detail": "Ledgerly\nHome\nPayments\nOnboarding\nAgent controls\nAda Okafor · admin\nAssistant\nPayments\nWaiting for approval (2)\nSoylent Catering\n$2,380.00\nApprove payment\nRejec"
+    },
+    {
+      "id": "heading now says \"Latest payments\"",
+      "pass": true
+    }
+  ],
+  "agent": {
+    "ok": true,
+    "turns": 20,
+    "costUsd": 0.44356680000000004,
+    "durationMs": 80805,
+    "toolCalls": 18,
+    "toolsUsed": {
+      "Skill": 1,
+      "ToolSearch": 1,
+      "mcp__stagecraft__feedback_list": 1,
+      "Grep": 2,
+      "Bash": 2,
+      "mcp__stagecraft__preview_screenshot": 5,
+      "Read": 2,
+      "Edit": 2,
+      "mcp__stagecraft__feedback_reply": 2
+    },
+    "skillsUsed": [
+      "stagecraft-handle-feedback"
+    ],
+    "screenshots": 5,
+    "permissionDenials": [
+      "Bash: {\"command\":\"git add src/pages/Payments.tsx && git commit -q -m \\\"Rename Approve button to 'Approve payment'\\n\\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropi"
+    ],
+    "mcpConnected": true,
+    "finalMessage": "I made the changes for both comments and replied to each with before/after screenshots. They're now marked agent_done for Priya and Dana to resolve, but **the changes aren't committed yet**: I tried to commit each one separately and the commit was blocked for approval.\n\n- **Priya, Payments:** the approvals list button now says \"Approve payment\" instead of \"Approve\" (`src/pages/Payments.tsx:32`). At 390px wide (phone size) the longer label wraps to two lines. On the $12,850 row this pushes the Reject button almost to the card's edge, though it stays inside the card. I didn't change the layout because that's beyond the comment.\n- **Dana, Home:** the heading now says \"Latest payments\" instead of \"Recent payments\" (`src/pages/Dashboard.tsx:33`).\n\nThe \"Approve\" button in the Assistant panel (`src/Assistant.tsx:89`) still says \"Approve\". It's for approving the assistant's actions, not payments, so the comment doesn't cover it.\n\nBecause nothing was committed, both replies are stamped with the old commit `67a0553`, which doesn't contain the changes. If you approve the commits (one per fix), I'll make them.",
+    "timedOut": false
+  },
+  "changedFiles": {
+    "ref-react-vite": [
+      "src/pages/Dashboard.tsx",
+      "src/pages/Payments.tsx"
+    ]
+  },
+  "doctorWarnings": [],
+  "screenshots": [
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-FB-01/_.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-FB-01/_payments.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-FB-01/_payments.png",
+    "/home/user/build-mode/evals/results/2026-11-18-09-14/T-FB-01/_.png"
+  ],
+  "workdir": "/home/user/build-mode/tests/.tmp/evals/T-FB-01-mwlx57vv",
+  "startedAt": "2026-11-18T09:28:25.387Z"
+}
