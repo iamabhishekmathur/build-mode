@@ -27,7 +27,7 @@ export function isLocal(req: IncomingMessage): boolean {
 }
 
 /** API routes a share-link viewer may not use (FR-1404: explore and comment, never change files or config). */
-const VIEWER_DENY = new Set(['POST /scenarios', 'POST /tapes', 'POST /reload', 'POST /navigate', 'POST /mockdb/seed', 'POST /shares', 'GET /shares']);
+const VIEWER_DENY = new Set(['POST /dev/restart', 'GET /dev/logs', 'POST /scenarios', 'POST /tapes', 'POST /reload', 'POST /navigate', 'POST /mockdb/seed', 'POST /shares', 'GET /shares']);
 
 const feedbackStores = new WeakMap<Engine, FeedbackStore>();
 /** When each session's clock was set, so scenario time runs forward like real time. */
@@ -111,6 +111,8 @@ export class StagecraftServer {
   private watchers: FSWatcher[] = [];
   private runtimeJs: string | null = null;
   log: (m: string) => void;
+  /** Set by `stagecraft dev`, which owns the dev-server processes. */
+  devControl?: { restart(): Promise<string>; logs(tail?: number): string[] };
 
   constructor(engine: Engine, opts: ServerOptions = {}) {
     this.engine = engine;
@@ -623,6 +625,12 @@ export class StagecraftServer {
       case 'POST /reload':
         await e.reload();
         return sendJson(res, 200, { ok: true });
+      case 'POST /dev/restart':
+        if (!this.devControl) throw new UserError('This proxy was not started by "stagecraft dev", so it cannot restart the dev server.', 409);
+        return sendJson(res, 200, { status: await this.devControl.restart() });
+      case 'GET /dev/logs':
+        if (!this.devControl) throw new UserError('No dev-server logs: the proxy was not started by "stagecraft dev".', 409);
+        return sendJson(res, 200, { lines: this.devControl.logs(Number(url.searchParams.get('tail') ?? 120)) });
       case 'GET /link':
         return sendJson(res, 200, { url: this.link(s, url) });
       default:

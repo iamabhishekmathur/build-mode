@@ -8,7 +8,7 @@ description: Get this repo running on Stagecraft mock data so a designer can pro
 Goal: the app renders through the Stagecraft proxy with the panel visible and **every** API call served by a mock.
 
 1. Run `npx --no stagecraft doctor`. Read every line. Fix errors first.
-2. Start `npx --no stagecraft dev`.
+2. Check the proxy runs (`session_get`). If not, start `npx --no stagecraft dev` in the background.
    - `stagecraft init` wrote **placeholder** personas and states (labels end in "(placeholder)"). Replace them with the product's real roles and states. Use the user's own words: if they say "employee", the persona, its seed user's role and what the UI shows must say employee, not "member". Open the proxy URL it prints.
 3. **If the repo has an OpenAPI spec** (`stagecraft.detect.json` → `apiSpecs`, or an `api` repo in the workspace), generate mocks first, then hand-tune:
    ```bash
@@ -33,6 +33,7 @@ Goal: the app renders through the Stagecraft proxy with the panel visible and **
    - `persona` is the selected persona plus its `id` (`persona.userId`, `persona.role`…).
    - `apiOrigins` in `stagecraft.config.ts` lists what is mocked: paths (`/api`) for same-origin calls, full origins (`https://api.example.com`) for other hosts. Server-side `fetch` (SSR, React Server Components) to those origins is mocked too.
 5. Common failures and fixes:
+   - **App does not start or crashes**: read `dev_logs` for the cause. After you change `.env.stagecraft`, `stagecraft.config.ts` (devCommand, devUrl, apiOrigins) or dependencies, call `dev_restart`; do not start a second `stagecraft dev`.
    - **Missing env vars**: add safe fake values to `.env.stagecraft`. Never copy values from `.env.production` or a secret store.
    - **Auth redirect loop**: mock the session endpoint (`GET /api/me` or similar) to return the persona user. If the app checks a cookie or token in code, add a dev-only guard on `import.meta.env.STAGECRAFT` / `process.env.STAGECRAFT`.
    - **Wrong Node version**: read `node` in `stagecraft.detect.json`; use the version manager in the repo (`.nvmrc`).

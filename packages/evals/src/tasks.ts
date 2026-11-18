@@ -12,6 +12,10 @@ export interface TaskContext {
   visit: (path: string, opts?: { scenario?: string; persona?: string; states?: Record<string, string> }) => Promise<{ text: string; html: string; errors: string[] }>;
   changedFiles: Record<string, string[]>;
   branches: Record<string, string>;
+  /** Everything the agent said (assistant text blocks + final message). */
+  agentText: string;
+  /** Raw transcript (JSONL) of the agent run. */
+  transcript: string;
 }
 
 export interface EvalTask {
@@ -23,6 +27,10 @@ export interface EvalTask {
   fixture: 'ref-react-vite' | 'ref-next-app' | 'multi-repo';
   /** Remove all Stagecraft files first, then run `stagecraft init` (the product's own step), so the agent must finish setup. */
   strip: boolean;
+  /** Change the fixture before it becomes the "customer repo" commit (plant bugs, traps, mess). */
+  transform?: (repos: Record<string, string>, host: string) => void;
+  /** Runs after the app is up, before the agent starts (e.g. seed feedback as a person). */
+  before?: (ctx: { base: string; host: string }) => Promise<void>;
   prompt: string;
   /** Routes that must render with no errors and no unmocked calls. */
   routes: string[];

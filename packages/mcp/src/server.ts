@@ -112,6 +112,12 @@ export async function createMcpServer(opts: McpOptions = {}) {
     return (await setupReport(needRoot())).markdown;
   });
 
+  tool('dev_logs', 'Recent output of the app\'s dev server(s): build errors, crashes, missing env vars (FR-206). Secret-looking values are masked.', { tail: z.number().optional() }, async (a) =>
+    (await call('GET', `/dev/logs?tail=${a.tail ?? 120}`)).lines.join('\n') || '(no output yet)',
+  );
+
+  tool('dev_restart', 'Restart the app\'s dev server(s) and reload stagecraft.config.ts. Use after you change .env.stagecraft, devCommand/devUrl, apiOrigins or dependencies. Waits until the app answers.', {}, async () => call('POST', '/dev/restart'));
+
   tool('setup_detect', 'Detect the repo stack (framework, package manager, dev command, router, API style, flags, design system, Storybook).', {}, async () => {
     if (!root) throw new Error('No stagecraft.config.ts found. Run "npx --no stagecraft init" first.');
     return detect(root);

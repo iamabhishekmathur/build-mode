@@ -43,6 +43,7 @@ export function prepare(task: EvalTask, dir: string): { repos: Record<string, st
       else rmSync(agents);
     }
   }
+  task.transform?.(repos, host);
   for (const [, d] of Object.entries(repos)) {
     // Local CLI so `npx --no stagecraft` resolves without a download.
     mkdirSync(join(d, 'node_modules/.bin'), { recursive: true });
@@ -173,6 +174,7 @@ export async function runTask(task: EvalTask, outDir: string, log: (m: string) =
   const { repos, host } = prepare(task, work);
   const devLog: string[] = [];
   let dev = await startDev(host, devLog);
+  if (task.before) await task.before({ base: dev.base, host });
   log(`[${task.id}] agent running (timeout ${task.timeoutMin} min)…`);
   // --dry: no agent. Measures what the product does on its own (baseline) and checks the checkers.
   const agent: AgentMetrics = process.argv.includes('--dry')
@@ -248,7 +250,21 @@ export async function runTask(task: EvalTask, outDir: string, log: (m: string) =
       }
       checks.push({ id: 'typecheck', pass: ok, detail: detail || undefined });
     }
-    const ctx: TaskContext = { repos, host, base: dev.base, visit, changedFiles, branches };
+    const transcript = existsSync(join(taskOut, 'transcript.jsonl')) ? readFileSync(join(taskOut, 'transcript.jsonl'), 'utf8') : '';
+    const agentText = transcript
+      .split('\n')
+      .flatMap((l) => {
+        try {
+          const e = JSON.parse(l);
+          if (e.type === 'assistant') return (e.message?.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text);
+          if (e.type === 'result') return [String(e.result ?? '')];
+        } catch {
+          /* skip */
+        }
+        return [];
+      })
+      .join('\n');
+    const ctx: TaskContext = { repos, host, base: dev.base, visit, changedFiles, branches, agentText, transcript };
     for (const c of task.checks) {
       try {
         checks.push(await c.run(ctx));
