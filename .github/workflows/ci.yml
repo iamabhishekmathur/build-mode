@@ -22,4 +22,7 @@ jobs:
       - name: Doctor on the reference app
         working-directory: examples/ref-react-vite
         run: node ../../packages/cli/src/bin.ts doctor
+      - name: Agent files in sync and doctor on the flags reference app (FR-403)
+        working-directory: examples/ref-flags
+        run: node ../../packages/cli/src/bin.ts agents check && node ../../packages/cli/src/bin.ts doctor
       - run: npx vitest run

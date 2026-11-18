@@ -22,6 +22,8 @@ export interface MockReply {
   status: number;
   body?: unknown;
   headers?: Record<string, string>;
+  /** The request did not write the mock DB (e.g. SDK telemetry via POST): do not notify the app. */
+  readOnly?: boolean;
 }
 
 export type MockHandler<DB = any> = (ctx: MockContext<DB>) => unknown | Promise<unknown>;
