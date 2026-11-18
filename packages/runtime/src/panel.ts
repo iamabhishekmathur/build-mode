@@ -1,5 +1,6 @@
 import { encodeShareState, type FaultRule, type Json } from '@stagecraft/core';
 import type { StagecraftRuntime, TapeStatus } from './types.ts';
+import { renderPins, startPicker, type Pick } from './feedback.ts';
 
 const CSS = `
 :host{all:initial;position:fixed;right:16px;bottom:16px;z-index:2147483647;font:13px/1.4 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color-scheme:light dark}
@@ -73,11 +74,72 @@ export function mountPanel(rt: StagecraftRuntime, defaults: any) {
   let message = '';
   let busy = false;
   let dbView: string | null = null;
+  // ---- feedback (FR-901..905) ----
+  let comments: any[] = [];
+  let draft: Pick | null = null;
+  let picking: (() => void) | null = null;
+  let focusComment: string | null = null;
+  let sentPrompt = false;
+  const pagePath = () => location.pathname;
+  const pageComments = () => comments.filter((c) => new URL(c.url, location.href).pathname === pagePath() && !['resolved', 'wont_fix'].includes(c.status));
+  async function loadComments() {
+    try {
+      comments = await rt.api('GET', '/feedback');
+    } catch {
+      comments = [];
+    }
+    drawPins();
+    render();
+  }
+  function drawPins() {
+    renderPins(pageComments(), (id) => {
+      focusComment = id;
+      if (mode !== 'open') setMode('open');
+      else render();
+      (root.querySelector(`[data-comment="${id}"]`) as HTMLElement | null)?.scrollIntoView({ block: 'nearest' });
+    }, mode !== 'hidden');
+  }
+  addEventListener('resize', () => drawPins());
+  addEventListener('popstate', () => setTimeout(() => (drawPins(), render()), 50));
+  function commentsSection() {
+    const here = comments.filter((c) => new URL(c.url, location.href).pathname === pagePath());
+    const open = comments.filter((c) => c.status === 'open');
+    const status: Record<string, string> = { open: 'Open', sent: 'Sent to agent', agent_done: 'Agent replied', resolved: 'Resolved', wont_fix: "Won't fix" };
+    const shot = (id: string, name?: string) => (name ? `<a href="/__stagecraft/api/feedback/${esc(id)}/shot/${esc(name)}.png" target="_blank" rel="noopener">${esc(name.startsWith('after') ? 'after' : 'before')}</a>` : '');
+    const items = here
+      .map((c, i) => {
+        const n = pageComments().indexOf(c);
+        const replies = c.replies
+          .map((r: any) => `<div class="small" style="margin:4px 0 0 8px"><strong>${esc(r.author)}:</strong> ${esc(r.text)} ${shot(c.id, r.before)} ${shot(c.id, r.after)}${r.commit ? ` <span class="muted">${esc(r.commit)}</span>` : ''}</div>`)
+          .join('');
+        const human = c.status === 'resolved' || c.status === 'wont_fix'
+          ? `<button data-k="fb-status:${esc(c.id)}:open">Reopen</button>`
+          : `<button data-k="fb-status:${esc(c.id)}:resolved">Resolve</button><button data-k="fb-status:${esc(c.id)}:wont_fix">Won't fix</button>`;
+        return `<div data-comment="${esc(c.id)}" style="padding:6px 0;border-top:1px solid var(--line)${focusComment === c.id ? ';background:var(--soft)' : ''}">
+          <div class="small muted">${n >= 0 ? `#${n + 1} · ` : ''}${esc(status[c.status] ?? c.status)} · ${esc(c.author)}${c.source?.file ? ` · ${esc(c.source.file.split('/').slice(-2).join('/'))}${c.source.line ? ':' + c.source.line : ''}` : ''}</div>
+          <div>${esc(c.text)} ${shot(c.id, c.screenshot)}</div>${replies}
+          <div class="row">${human}</div></div>`;
+      })
+      .join('');
+    const composer = draft
+      ? `<div style="border:1px solid var(--accent);border-radius:8px;padding:8px;margin-bottom:6px">
+          <div class="small muted">On ${esc(draft.label)}${draft.source?.file ? ` · ${esc(draft.source.file.split('/').slice(-2).join('/'))}${draft.source.line ? ':' + draft.source.line : ''}` : ''}</div>
+          <textarea data-k="fb-text" aria-label="Comment" rows="3" style="width:100%;font:inherit;margin:6px 0;color:var(--fg);background:var(--soft);border:1px solid var(--line);border-radius:6px;padding:4px"></textarea>
+          <div class="row"><input type="text" data-k="fb-author" aria-label="Your name" placeholder="Your name" value="${esc(store('stagecraft.author') ?? '')}"><button class="primary" data-k="fb-save">Comment</button><button data-k="fb-cancel">Cancel</button></div></div>`
+      : '';
+    const send = open.length
+      ? `<div class="row"><button data-k="fb-send">Send ${open.length} open comment${open.length > 1 ? 's' : ''} to agent</button></div>`
+      : '';
+    const prompt = sentPrompt ? `<div class="small">Sent. In your agent, say: <code>Handle the Stagecraft feedback</code> <button class="icon" data-k="fb-copy-prompt" aria-label="Copy prompt">⧉</button></div>` : '';
+    if (!composer && !here.length && !open.length && !prompt) return '';
+    return `<section aria-labelledby="h-fb"><h2 id="h-fb">Comments${here.length ? ` (${here.length} on this page)` : ''}</h2>${composer}${items}${send}${prompt}</section>`;
+  }
 
   const setMode = (m: Mode) => {
     mode = m;
     store('stagecraft.panel', m);
     render();
+    drawPins();
   };
 
   // Alt+Shift+S toggles hidden <-> open.
@@ -202,10 +264,12 @@ export function mountPanel(rt: StagecraftRuntime, defaults: any) {
     root.innerHTML = `<style>${CSS}</style>
     <div class="panel" role="region" aria-label="Stagecraft preview panel" ${busy ? 'aria-busy="true"' : ''}>
       <header><strong>Stagecraft</strong><span class="sid">${rt.sessionId === 'main' ? '' : esc(rt.sessionId)}</span>
+        <button class="icon" data-k="comment" aria-label="${picking ? 'Cancel comment' : 'Add a comment: pick an element or drag a box'}" aria-pressed="${picking ? 'true' : 'false'}">💬</button>
         <button class="icon" data-k="copy-link" aria-label="Copy link to this view">🔗</button>
         <button class="icon" data-k="dock" aria-label="Move panel to the ${dock === 'right' ? 'left' : 'right'} side">${dock === 'right' ? '⇤' : '⇥'}</button>
         <button class="icon" data-k="collapse" aria-label="Collapse panel">–</button>
         <button class="icon" data-k="hide" aria-label="Hide panel (Alt+Shift+S to show)">✕</button></header>
+      ${commentsSection()}
       <section aria-labelledby="h-who"><h2 id="h-who">Who</h2>
         <div class="row"><label for="persona">Persona</label><select id="persona" data-k="persona">${personaOpts}</select></div></section>
       ${stateRows ? `<section aria-labelledby="h-states"><h2 id="h-states">States</h2>${stateRows}</section>` : ''}
@@ -218,7 +282,7 @@ export function mountPanel(rt: StagecraftRuntime, defaults: any) {
       <section aria-labelledby="h-faults"><h2 id="h-faults">Faults</h2>${faults}
         <div class="row"><select data-k="fault-endpoint" aria-label="Endpoint">${(c.endpoints ?? []).map((e: string) => `<option>${esc(e)}</option>`).join('')}</select>
         <select data-k="fault-kind" aria-label="Fault">${Object.keys(FAULT_KINDS).map((k) => `<option>${esc(k)}</option>`).join('')}</select>
-        <button data-k="fault-add">Add</button></div></section>
+        <button data-k="fault-add" aria-label="Add fault">Add</button></div></section>
       <section aria-labelledby="h-db"><h2 id="h-db">Mock DB</h2>
         <div class="row"><button data-k="db-view">${dbView === null ? 'View' : 'Hide'}</button><button data-k="db-reset">Reset to seed + states</button></div>
         ${dbView !== null ? `<pre>${esc(dbView)}</pre>` : ''}</section>
@@ -232,6 +296,58 @@ export function mountPanel(rt: StagecraftRuntime, defaults: any) {
   function wire() {
     const on = (k: string, ev: string, fn: (el: any) => void) => root.querySelectorAll(`[data-k^="${k}"]`).forEach((el) => el.addEventListener(ev, () => fn(el)));
     on('copy-link', 'click', () => copy(linkFor(), 'Link copied'));
+    on('comment', 'click', () => {
+      if (picking) {
+        picking();
+        picking = null;
+        return render();
+      }
+      draft = null;
+      picking = startPicker(
+        (p) => {
+          picking = null;
+          draft = p;
+          render();
+          (root.querySelector('[data-k=fb-text]') as HTMLElement | null)?.focus();
+        },
+        () => {
+          picking = null;
+          render();
+        },
+      );
+      message = 'Click an element or drag a box. Esc cancels.';
+      render();
+    });
+    on('fb-cancel', 'click', () => {
+      draft = null;
+      render();
+    });
+    on('fb-save', 'click', () => {
+      const text = (root.querySelector('[data-k=fb-text]') as HTMLTextAreaElement).value;
+      const author = (root.querySelector('[data-k=fb-author]') as HTMLInputElement).value.trim();
+      if (author) store('stagecraft.author', author);
+      const d = draft!;
+      run('Comment saved', async () => {
+        await rt.api('POST', '/feedback', { text, author, url: location.pathname + location.search, viewport: { width: innerWidth, height: innerHeight }, anchor: { kind: d.kind, selector: d.selector, text: d.text, box: d.box }, source: d.source });
+        draft = null;
+        await loadComments();
+      });
+    });
+    on('fb-status:', 'click', (el) => {
+      const [, id, status] = el.dataset.k.split(':');
+      run('Comment updated', async () => {
+        await rt.api('PATCH', `/feedback/${id}`, { status, author: store('stagecraft.author') ?? undefined });
+        await loadComments();
+      });
+    });
+    on('fb-send', 'click', () =>
+      run('Sent to agent', async () => {
+        await rt.api('POST', '/feedback/send', {});
+        sentPrompt = true;
+        await loadComments();
+      }),
+    );
+    on('fb-copy-prompt', 'click', () => copy('Handle the Stagecraft feedback', 'Prompt copied'));
     on('collapse', 'click', () => setMode('collapsed'));
     on('dock', 'click', () => {
       dock = dock === 'right' ? 'left' : 'right';
@@ -321,10 +437,14 @@ export function mountPanel(rt: StagecraftRuntime, defaults: any) {
     dbView = JSON.stringify(out.value, null, 2);
     render();
   };
+  rt.on('feedback', () => void loadComments());
+  rt.on('navigate', () => setTimeout(() => (drawPins(), render()), 50));
+  rt.on('data', () => setTimeout(drawPins, 300));
   rt.on('data', render);
   rt.on('ui', render);
   rt.on('tape', render);
   rt.on('catalog', render);
   rt.on('db', () => void refreshDb());
   render();
+  void loadComments();
 }

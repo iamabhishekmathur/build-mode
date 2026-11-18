@@ -148,7 +148,7 @@ describe('scenarios and links', () => {
     const page = await open('/payments');
     await panel(page).getByRole('combobox', { name: 'Endpoint' }).selectOption('GET /api/payments');
     await panel(page).getByRole('combobox', { name: 'Fault', exact: true }).selectOption('500 error');
-    await panel(page).getByRole('button', { name: 'Add' }).click();
+    await panel(page).getByRole('button', { name: 'Add fault' }).click();
     await expect.poll(() => page.getByTestId('payments-error').count()).toBe(1);
     await page.close();
   });

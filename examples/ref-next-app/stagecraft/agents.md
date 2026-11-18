@@ -23,4 +23,5 @@ This repo is set up for prototyping with Stagecraft. The app runs on **mock data
 - `stagecraft/scenarios/*.json`: saved scenarios. `stagecraft/tapes/*.json`: product-agent conversation tapes.
 
 ## Skills
-Use the skills in your skills folder: `setup`, `build-screen`, `add-state`, `create-variant`, `apply-figma-frame`, `make-tape`, `self-check`, `handoff`.
+Use the skills in your skills folder: `setup`, `build-screen`, `add-state`, `create-variant`, `apply-figma-frame`, `make-tape`, `self-check`, `handle-feedback`, `handoff`.
+- When people leave comments in the panel, they reach you through `feedback_list`. Reply with `feedback_reply`; never resolve comments yourself.

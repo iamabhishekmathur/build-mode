@@ -42,7 +42,8 @@ export async function createMcpServer(opts: McpOptions = {}) {
     try {
       res = await fetch(`${baseUrl}/__stagecraft/api${path}`, {
         method,
-        headers: { 'content-type': 'application/json', ...(session ? { 'x-stagecraft-session': session } : {}) },
+        // The proxy refuses some actions from agents (e.g. resolving feedback: only people do that).
+        headers: { 'content-type': 'application/json', 'x-stagecraft-actor': 'agent', ...(session ? { 'x-stagecraft-session': session } : {}) },
         body: body === undefined ? undefined : JSON.stringify(body),
       });
     } catch {
@@ -78,6 +79,51 @@ export async function createMcpServer(opts: McpOptions = {}) {
       if (!file) throw new Error('No stagecraft.config.ts found.');
       const { config, root: r } = await loadConfig(file);
       return workspaceStatus(resolveWorkspace(r, config));
+    },
+  );
+
+  async function shot(id: string, name?: string): Promise<Content | null> {
+    if (!name) return null;
+    try {
+      const r = await fetch(`${baseUrl}/__stagecraft/api/feedback/${encodeURIComponent(id)}/shot/${encodeURIComponent(name)}.png`);
+      if (!r.ok) return null;
+      return { type: 'image', data: Buffer.from(await r.arrayBuffer()).toString('base64'), mimeType: 'image/png' };
+    } catch {
+      return null;
+    }
+  }
+
+  tool(
+    'feedback_list',
+    'Comments people pinned on the prototype (FR-903). Default: the ones sent to you. Each has text, author, page URL, element selector, source file/line when known, persona/states/flags/variants at comment time, and a screenshot with the target outlined. Use scenario/state from the comment to reproduce it.',
+    { status: z.string().optional().describe('Comma list: open, sent, agent_done, resolved, wont_fix. Default "sent".'), images: z.boolean().optional().describe('Attach screenshots (default true, max 6)') },
+    async (a) => {
+      const items: any[] = await call('GET', `/feedback?status=${encodeURIComponent(a.status ?? 'sent')}`);
+      const content: Content[] = [{ type: 'text', text: JSON.stringify(items, null, 2) }];
+      if (a.images !== false) {
+        for (const it of items.slice(0, 6)) {
+          const img = await shot(it.id, it.screenshot);
+          if (img) content.push({ type: 'text', text: `Screenshot for ${it.id}:` }, img);
+        }
+      }
+      if (!items.length) content[0] = { type: 'text', text: `No feedback with status ${a.status ?? 'sent'}. Ask the person to press "Send to agent" in the Stagecraft panel, or list status "open".` };
+      return { content };
+    },
+  );
+
+  tool(
+    'feedback_reply',
+    'Reply to a comment after you changed the code: what you changed. Stagecraft takes an "after" screenshot in the comment\'s original state and attaches before/after. Sets status agent_done. You cannot resolve comments; the person does.',
+    { id: z.string(), text: z.string(), commit: z.string().optional() },
+    async (a) => {
+      const fb = await call('POST', `/feedback/${encodeURIComponent(a.id)}/reply`, { text: a.text, commit: a.commit });
+      const last = fb.replies[fb.replies.length - 1];
+      const content: Content[] = [{ type: 'text', text: JSON.stringify({ id: fb.id, status: fb.status, reply: last }, null, 2) }];
+      for (const n of [last.before, last.after]) {
+        const img = await shot(fb.id, n);
+        if (img) content.push(img);
+      }
+      return { content };
     },
   );
 

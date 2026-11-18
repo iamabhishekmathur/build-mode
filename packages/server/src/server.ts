@@ -10,6 +10,15 @@ import { compile, matchRoute } from './routes.ts';
 import type { TapeClient } from './tape-player.ts';
 import { comparePage } from './compare.ts';
 import { resolveWorkspace } from './workspace.ts';
+import { FeedbackStore, type Actor } from './feedback.ts';
+
+const feedbackStores = new WeakMap<Engine, FeedbackStore>();
+/** One feedback store per engine (shared by port-mounted app servers). */
+export function feedbackFor(engine: Engine): FeedbackStore {
+  let f = feedbackStores.get(engine);
+  if (!f) feedbackStores.set(engine, (f = new FeedbackStore(engine)));
+  return f;
+}
 
 export const SESSION_HEADER = 'x-stagecraft-session';
 const ONE_SHOT_PARAMS = ['sc_scenario', 'sc_tape', 'sc_step', 'sc_play', 'sc_panel'];
@@ -99,6 +108,8 @@ export class StagecraftServer {
       this.server.listen(port, host, () => resolve());
     });
     const actual = (this.server.address() as net.AddressInfo).port;
+    const fb = feedbackFor(this.engine);
+    if (!fb.baseUrl) fb.baseUrl = `http://127.0.0.1:${actual}`;
     if (this.opts.watch !== false) this.startWatch();
     return { url: `http://${host === '0.0.0.0' ? 'localhost' : host}:${actual}`, port: actual };
   }
@@ -432,6 +443,7 @@ export class StagecraftServer {
     const s = this.sessionFor(req, url);
     const method = req.method ?? 'GET';
     const key = `${method} ${route}`;
+    if (route === '/feedback' || route.startsWith('/feedback/')) return this.feedbackApi(req, res, url, route, s);
     switch (key) {
       case 'GET /boot':
         return sendJson(res, 200, { session: e.sessionInfo(s), catalog: e.catalog(), defaults: e.defaultState() });
@@ -529,6 +541,46 @@ export class StagecraftServer {
       default:
         throw new UserError(`No Stagecraft API route ${key}`, 404);
     }
+  }
+
+  /** Feedback (FR-901..905). The MCP server sends `x-stagecraft-actor: agent`; the browser panel is a person. */
+  private async feedbackApi(req: IncomingMessage, res: ServerResponse, url: URL, route: string, s: Session) {
+    const store = feedbackFor(this.engine);
+    if ((req.method ?? 'GET') !== 'GET') {
+      // Every open panel refreshes its comment list after a change.
+      res.on('finish', () => {
+        for (const sess of this.engine.sessions.values()) this.engine.emit(sess, { type: 'feedback' });
+      });
+    }
+    const actor: Actor = req.headers['x-stagecraft-actor'] === 'agent' ? 'agent' : 'human';
+    const method = req.method ?? 'GET';
+    const parts = route.split('/').filter(Boolean); // ['feedback', id?, action?, name?]
+    const id = parts[1];
+    if (method === 'GET' && parts.length === 1) return sendJson(res, 200, store.list({ status: url.searchParams.get('status') ?? undefined, path: url.searchParams.get('path') ?? undefined }));
+    if (method === 'POST' && parts.length === 1) {
+      if (actor === 'agent') throw new UserError('Comments come from people, not agents', 403);
+      return sendJson(res, 200, await store.create(s.id, await readJson(req)));
+    }
+    if (method === 'POST' && id === 'send') {
+      if (actor === 'agent') throw new UserError('Only a person can send feedback to the agent', 403);
+      const { ids } = await readJson(req);
+      return sendJson(res, 200, store.send(ids));
+    }
+    if (method === 'GET' && parts.length === 2) return sendJson(res, 200, store.get(id!));
+    if (method === 'PATCH' && parts.length === 2) {
+      const { status, note, author } = await readJson(req);
+      return sendJson(res, 200, store.setStatus(id!, status, actor, author, note));
+    }
+    if (method === 'POST' && parts[2] === 'reply') {
+      if (actor !== 'agent') throw new UserError('Replies with screenshots come from the agent (feedback_reply). People can add a note with PATCH.', 403);
+      return sendJson(res, 200, await store.reply(id!, await readJson(req)));
+    }
+    if (method === 'GET' && parts[2] === 'shot' && parts[3]) {
+      const file = store.shotPath(id!, parts[3].replace(/\.png$/, ''));
+      res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
+      return res.end(readFileSync(file));
+    }
+    throw new UserError(`No feedback route ${method} ${route}`, 404);
   }
 
   private link(s: Session, url: URL) {

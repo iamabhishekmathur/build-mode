@@ -24,7 +24,8 @@ export type SessionEvent =
   | { type: 'db' }
   | { type: 'navigate'; url: string }
   | { type: 'tape'; status: TapeStatus | null }
-  | { type: 'reload' };
+  | { type: 'reload' }
+  | { type: 'feedback' };
 
 export interface Session {
   id: string;

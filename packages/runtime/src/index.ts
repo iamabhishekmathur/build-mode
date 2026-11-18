@@ -168,6 +168,7 @@ import { mountPanel } from './panel.ts';
         info = { ...info, tape: e.status };
         emit('tape', e.status);
       } else if (e.type === 'navigate') rt.navigate(e.url);
+      else if (e.type === 'feedback') emit('feedback');
     };
   }
 

@@ -21,7 +21,7 @@ export interface TapeStatus {
   done: boolean;
 }
 
-export type RuntimeEvent = 'data' | 'ui' | 'db' | 'tape' | 'navigate' | 'catalog';
+export type RuntimeEvent = 'data' | 'ui' | 'db' | 'tape' | 'navigate' | 'catalog' | 'feedback';
 
 /** The API at `window.__STAGECRAFT__`. Adapters and the panel use it. */
 export interface StagecraftRuntime {

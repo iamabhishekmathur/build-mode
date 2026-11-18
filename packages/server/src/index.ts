@@ -7,3 +7,4 @@ export * from './detect.ts';
 export * from './dev-env.ts';
 export * from './workspace.ts';
 export * from './settle.ts';
+export * from './feedback.ts';
