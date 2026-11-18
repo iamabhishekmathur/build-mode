@@ -6,3 +6,4 @@ test-results/
 .stagecraft-cache/
 tests/.tmp/
 evals/results/*-dry*/
+.claude/worktrees/
