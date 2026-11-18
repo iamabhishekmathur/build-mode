@@ -20,6 +20,17 @@ describe('detect (FR-101)', () => {
     expect(d.flagVendor).toEqual([]);
   });
 
+  it('detects the Vue and Nuxt reference apps', () => {
+    const v = detect(join(REPO, 'examples/ref-vue-vite'));
+    expect(v.framework).toMatchObject({ name: 'vue', tier: 1 });
+    expect(v).toMatchObject({ bundler: 'vite', router: 'vue-router', devPort: 5175, typescript: true });
+    expect(v.stateLibrary).toEqual(['pinia']);
+    const n = detect(join(REPO, 'examples/ref-nuxt'));
+    expect(n.framework).toMatchObject({ name: 'nuxt', tier: 1 });
+    expect(n).toMatchObject({ bundler: 'vite', router: 'nuxt-pages', devPort: 3130 });
+    expect(n.devCommand).toMatch(/run dev$/);
+  });
+
   it('detects other stacks from package.json and files', () => {
     const fx = fixture('detect');
     writeFileSync(join(fx.root, 'package.json'), JSON.stringify({ scripts: { dev: 'nuxt dev --port 3001' }, dependencies: { nuxt: '^3.12.0', vue: '^3.4.0', pinia: '^2', '@growthbook/growthbook': '^1', '@apollo/client': '^3' }, devDependencies: { storybook: '^8.4.0', '@storybook/addon-mcp': '^0.1.0' } }));
@@ -88,6 +99,14 @@ describe('doctor (FR-108, FR-507)', () => {
     const r = await doctor(EXAMPLE);
     expect(r.errors).toEqual([]);
     expect(r.ok.join('\n')).toMatch(/Every endpoint string found in product code has a mock/);
+  });
+
+  it('passes on the Vue and Nuxt reference apps', async () => {
+    for (const app of ['examples/ref-vue-vite', 'examples/ref-nuxt']) {
+      const r = await doctor(join(REPO, app));
+      expect(r.errors, app).toEqual([]);
+      expect(r.warnings, app).toEqual([]);
+    }
   });
 
   it('finds unmocked endpoints, mock leakage and stale scenarios', async () => {
