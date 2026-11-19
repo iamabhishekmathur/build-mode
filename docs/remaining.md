@@ -2,20 +2,20 @@
 
 Everything in this repo runs on one machine: the dev proxy, mocks, the panel, the agent toolkit, checks, evals. What is left needs infrastructure, accounts or people that this environment does not have. For each item: why it is not built, and a concrete design to start from.
 
-## 1. Cloud runtime (FR-203, FR-204, FR-205, FR-107, NFR-201/202/207/208)
+## 1. Cloud runtime: microVM driver and fleet (FR-203/204/205, NFR-208)
 
-**Why not here:** needs a microVM fleet (Firecracker or gVisor), a control plane and a cloud account.
+**Built:** `packages/cloud`. Decision OQ-8 was to build our own. It has orchestrator, snapshots, egress allowlist, edge, API, secrets, sleep/resume and caps, tested on a namespace driver. See [cloud.md](cloud.md).
 
-**Design.** Nothing in the local core assumes a laptop, so the sandbox runs the same `stagecraft dev` process.
-- **Sandbox image:** Node LTS, Chromium, git, the agent CLIs. The workspace snapshot is keyed by `tenant + repo + lockfile hash` (FR-107): repo at a commit, `node_modules`, build caches.
-- **Orchestrator:** claim a warm VM, restore the snapshot, check out the branch with a 1-hour installation token, start `stagecraft dev --host 0.0.0.0`.
-  - Remote access control already exists. Only share-link viewer sessions are reachable from outside. Add an owner session bound to the signed-in user (an OIDC cookie → `x-stagecraft-session`).
-- **Sleep and resume (FR-204):**
-  - Persist the session state, the mock DB (already JSON) and feedback/shares (already files) to the snapshot.
-  - Resume by restoring files and calling `POST /dev/restart` (already built).
-- **Egress:** a per-VM allowlist (GitHub, the registry, the agent vendor, Figma, Stagecraft). The server-side preload already reroutes declared API origins. In the cloud, add a DNS sinkhole for every customer host.
-- **Strict mode (FR-205):** an org policy flag. The API refuses sandbox creation with 403. Share links then fall back to the owner's machine (local proxy plus a tunnel) or a static export (FR-1406, not built).
-- **Build or buy (OQ-8):** at 2,000 concurrent sandboxes (NFR-208), buying (E2B, Modal, Fly Machines) is faster to market. Build only if isolation or cost requires it. Decide after a cost test in the beta.
+**Why the rest is not built here:** this container has no `/dev/kvm`.
+
+**To finish:**
+- a `FirecrackerDriver` behind the existing `SandboxDriver` interface (jailer, rootfs, tap, vsock agent, snapshot restore);
+- a bare-metal fleet and a scheduler;
+- Postgres in place of the JSON store;
+- the KEK in a KMS;
+- a pen test.
+
+The plan is in cloud.md.
 
 ## 2. Desktop app (FR-201)
 

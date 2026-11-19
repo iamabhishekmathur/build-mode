@@ -1,4 +1,5 @@
 import http, { type IncomingMessage, type ServerResponse } from 'node:http';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import net from 'node:net';
 import { existsSync, readFileSync, watch, type FSWatcher } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -26,8 +27,24 @@ export function isLocal(req: IncomingMessage): boolean {
   return a === '127.0.0.1' || a === '::1' || a === '::ffff:127.0.0.1';
 }
 
+/**
+ * Cloud: the preview edge signs requests from the session owner (after its own login) with
+ * STAGECRAFT_EDGE_SECRET: `x-stagecraft-edge: <unix-ts>.<hmac("owner.<ts>")>`, valid 5 minutes.
+ * The edge strips this header from client requests, so it cannot be spoofed from outside.
+ */
+export function edgeOwner(req: IncomingMessage): boolean {
+  const secret = process.env.STAGECRAFT_EDGE_SECRET;
+  const h = req.headers['x-stagecraft-edge'];
+  if (!secret || typeof h !== 'string') return false;
+  const [ts, sig] = h.split('.');
+  if (!ts || !sig || Math.abs(Date.now() / 1000 - Number(ts)) > 300) return false;
+  const want = Buffer.from(createHmac('sha256', secret).update(`owner.${ts}`).digest('base64url'));
+  const got = Buffer.from(sig);
+  return want.length === got.length && timingSafeEqual(want, got);
+}
+
 /** API routes a share-link viewer may not use (FR-1404: explore and comment, never change files or config). */
-const VIEWER_DENY = new Set(['POST /dev/restart', 'GET /dev/logs', 'POST /scenarios', 'POST /tapes', 'POST /reload', 'POST /navigate', 'POST /mockdb/seed', 'POST /shares', 'GET /shares']);
+const VIEWER_DENY = new Set(['GET /state/export', 'POST /state/import', 'POST /dev/restart', 'GET /dev/logs', 'POST /scenarios', 'POST /tapes', 'POST /reload', 'POST /navigate', 'POST /mockdb/seed', 'POST /shares', 'GET /shares']);
 
 const feedbackStores = new WeakMap<Engine, FeedbackStore>();
 /** When each session's clock was set, so scenario time runs forward like real time. */
@@ -211,7 +228,7 @@ export class StagecraftServer {
 
   local(req: IncomingMessage): boolean {
     if (this.opts.simulateRemote && req.headers['x-stagecraft-test-remote'] === '1') return false;
-    return isLocal(req);
+    return isLocal(req) || edgeOwner(req);
   }
 
   /** Session id named by a request, without creating a session. */
@@ -625,6 +642,19 @@ export class StagecraftServer {
       case 'POST /reload':
         await e.reload();
         return sendJson(res, 200, { ok: true });
+      case 'GET /state/export':
+        // Cloud sleep/resume: sessions with their state and mock DB (feedback and shares are files).
+        return sendJson(res, 200, { sessions: [...e.sessions.values()].map((x) => ({ id: x.id, state: x.state, db: x.dbRef.db, viewer: x.viewer })) });
+      case 'POST /state/import': {
+        const { sessions } = await readJson(req);
+        for (const x of sessions ?? []) {
+          const t = e.getSession(x.id);
+          t.state = x.state;
+          t.dbRef = { db: x.db };
+          if (x.viewer) t.viewer = x.viewer;
+        }
+        return sendJson(res, 200, { imported: (sessions ?? []).length });
+      }
       case 'POST /dev/restart':
         if (!this.devControl) throw new UserError('This proxy was not started by "stagecraft dev", so it cannot restart the dev server.', 409);
         return sendJson(res, 200, { status: await this.devControl.restart() });

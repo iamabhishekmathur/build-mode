@@ -31,6 +31,7 @@ Panel tour: switch **Persona** and **Account** state, then press **💬** and cl
 | `github` | Prototype branches, draft PRs, preview comments + checks, branch-from, ready-for-review behind the gate, multi-repo PR sets. No merge. |
 | `mcp` | `stagecraft-mcp`: 48 tools for the agent (states, scenarios, mocks, tapes, feedback, checks, GitHub, dev logs/restart…). |
 | `cli` | `init`, `dev`, `doctor`, `report`, `guide`, `discover`, `mocks generate`, `check …`, `matrix`, `describe`, `share`, `pr …`, `workspace …`, `agents sync/check`, `hook …`. Templates for agent instructions and 9 skills. |
+| `cloud` | Own sandbox layer (OQ-8): namespace sandboxes (bubblewrap, netns, cgroups), egress allowlist proxy, snapshots, orchestrator (sleep/resume, caps, strict mode), preview edge, control-plane API, encrypted secrets. Firecracker driver planned. |
 | `evals` | Eval harness: runs Claude Code headless on prototyping tasks and checks the result automatically. |
 
 Reference apps in `examples/`:
@@ -41,7 +42,7 @@ Reference apps in `examples/`:
 - `ref-flags` (real flag SDKs);
 - `multi-repo` (four repos of one product).
 
-Docs: [multi-repo](docs/multi-repo.md), [flags](docs/flags.md), [GitHub](docs/github.md), [what is left and how to build it](docs/remaining.md), [evals](evals/README.md).
+Docs: [multi-repo](docs/multi-repo.md), [flags](docs/flags.md), [GitHub](docs/github.md), [cloud](docs/cloud.md), [what is left and how to build it](docs/remaining.md), [evals](evals/README.md).
 
 ### How it works
 
@@ -68,12 +69,12 @@ agent ──MCP──▶ stagecraft-mcp ──▶ control API (same sessions) ·
 | | 104 auto-fix | ◐ | CSP strip, env denylist, `.env.stagecraft`, auth/env guidance, restart. Node version switching not automated. |
 | | 105 setup report | ✅ | `stagecraft report` → Markdown for the setup PR; MCP `setup_report`. No desktop app to show it in. |
 | | 106 setup PR | ◐ | `init` writes only allowed paths; `pr open` (fake GitHub). Production build proven free of mock strings, not compared byte for byte. |
-| | 107 setup cache | ✗ | Cloud. |
+| | 107 setup cache | ✅ | Snapshots keyed by tenant + repo + lockfile hash (`packages/cloud`). |
 | | 108 doctor | ✅ | Plus workspace and OpenAPI drift checks. |
 | | 109 state discovery | ✅ | `stagecraft discover`. Recall on reference apps 10/15 = 67% (target 70%). |
 | Runtime | 201 desktop app | ✗ | Design in docs/remaining.md. |
 | | 202 local runtime | ✅ | `stagecraft dev`. Sends nothing to any Stagecraft server (there is none). |
-| | 203–205 cloud | ✗ | Design in docs/remaining.md. |
+| | 203–205 cloud | ◐ | Built and tested on the namespace driver; multi-tenant microVM driver not built. See docs/cloud.md. |
 | | 206 logs | ✅ | `dev_logs`, secret values masked. |
 | | 207 own IDE | ✅ | Plain checkout + generated configs. |
 | Agents | 301 Claude Code / Codex / Cursor | ◐ | Configs generated for all three. Only Claude Code exercised (evals). |
@@ -125,14 +126,14 @@ agent ──MCP──▶ stagecraft-mcp ──▶ control API (same sessions) ·
 
 | NFR | Status |
 |---|---|
-| 101 no production data | ◐ Mocks for declared origins; server preload warns about undeclared hosts; `.env.production` never loaded; safety evals. No egress firewall (cloud). |
-| 102 secrets | ◐ Nothing stored; dev logs masked; hooks block secret commits. KMS is cloud. |
+| 101 no production data | ◐ Mocks for declared origins; server preload warns about undeclared hosts; `.env.production` never loaded; safety evals. Cloud: nftables + egress allowlist proxy. |
+| 102 secrets | ◐ Nothing stored; dev logs masked; hooks block secret commits. Cloud: AES-256-GCM envelope encryption; KEK from env, KMS not wired. |
 | 103 PII scrubber | ✅ Applied to tapes, scenario snapshots, comments. Labelled set (own generator): 100% removed, 0/600 false positives. |
 | 105 local only | ✅ By design. |
 | 107 GitHub least privilege, no merge | ✅ |
 | 109 prompt injection | ◐ Comments are data (skill); the agent cannot resolve, comment, send or share through MCP; T-SAFE-01 eval. |
 | 106, 108 SOC 2, pen test | ✗ Not engineering-only. |
-| 2xx performance | ◐ Measured: check fast < 20 s, matrix 4 cells < 60 s, state switch re-renders in E2E. Not measured: LCP overhead, cold start (cloud). |
+| 2xx performance | ◐ Measured: check fast < 20 s, matrix 4 cells < 60 s, state switch re-renders in E2E. Cloud warm start p50 ~0.83 s on a small fixture (namespace driver). Not measured: LCP overhead, microVM cold start. |
 | 601–603 accessibility | ◐ Panel passes axe WCAG 2.2 AA (light + dark); keyboard control tested. No manual screen-reader audit. |
 
 ## Evals
